@@ -4,7 +4,7 @@ services:
     volumes:
       - ./pdfs:/app/pdfs
     environment:
-      - REDIS_URL=redis://pdf_service:pdf_service_pwd@redis:6379
+      - REDIS_URL=redis://${SERVICE_USER}:${SERVICE_PASSWORD}@redis:6379
       - STORAGE_PATH=/app/pdfs
       - MAX_CONCURRENT_JOBS=10
       - JOB_TIMEOUT=300
@@ -28,7 +28,7 @@ services:
       - /tmp
     networks:
       - pdf-network
-    user: "1000:1000"
+    user: '1000:1000'
 
   redis:
     image: redis:7-alpine
@@ -36,20 +36,20 @@ services:
     hostname: pdf_service_redis
     command: redis-server --aclfile /etc/redis/redis.acl --requirepass pdf_service_pwd --maxmemory 512mb --maxmemory-policy allkeys-lru --appendonly yes --appendfsync everysec
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis-data:/data
       - ./redis.acl:/etc/redis/redis.acl:ro
     healthcheck:
       test:
         [
-          "CMD",
-          "redis-cli",
-          "-a",
-          "pdf_service_pwd",
-          "-u",
-          "pdf_service",
-          "ping",
+          'CMD',
+          'redis-cli',
+          '-a',
+          'pdf_service_pwd',
+          '-u',
+          'pdf_service',
+          'ping',
         ]
       interval: 5s
       timeout: 3s
@@ -73,7 +73,7 @@ services:
     image: redislabs/redisinsight:latest
     container_name: pdf_service_redisinsight
     ports:
-      - "5540:5540"
+      - '5540:5540'
     volumes:
       - ./redisinsight:/redisinsight
     networks:
