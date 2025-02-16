@@ -51,3 +51,7 @@ redis-data/
 # System Files
 .DS_Store
 Thumbs.db 
+
+#Other
+pdfs/
+redis.acl
