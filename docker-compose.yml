@@ -1,0 +1,93 @@
+services:
+  pdf-service:
+    build: .
+    volumes:
+      - ./pdfs:/app/pdfs
+    environment:
+      - REDIS_URL=redis://pdf_service:pdf_service_pwd@redis:6379
+      - STORAGE_PATH=/app/pdfs
+      - MAX_CONCURRENT_JOBS=10
+      - JOB_TIMEOUT=300
+      - CACHE_DURATION=2592000
+      - NODE_ENV=production
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    read_only: true
+    tmpfs:
+      - /tmp
+    networks:
+      - pdf-network
+    user: "1000:1000"
+
+  redis:
+    image: redis:7-alpine
+    container_name: pdf_service_redis
+    hostname: pdf_service_redis
+    command: redis-server --aclfile /etc/redis/redis.acl --requirepass pdf_service_pwd --maxmemory 512mb --maxmemory-policy allkeys-lru --appendonly yes --appendfsync everysec
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./redis.acl:/etc/redis/redis.acl:ro
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "redis-cli",
+          "-a",
+          "pdf_service_pwd",
+          "-u",
+          "pdf_service",
+          "ping",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+    read_only: true
+    tmpfs:
+      - /tmp
+    networks:
+      - pdf-network
+
+  redisinsight:
+    image: redislabs/redisinsight:latest
+    container_name: pdf_service_redisinsight
+    ports:
+      - "5540:5540"
+    volumes:
+      - ./redisinsight:/redisinsight
+    networks:
+      - pdf-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local
+
+networks:
+  pdf-network:
+    driver: bridge
+    # internal: true
