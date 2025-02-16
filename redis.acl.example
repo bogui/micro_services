@@ -1,0 +1,45 @@
+# Default user is disabled for security
+user default off
+
+# PDF service user with restricted permissions
+# CHANGE THIS PASSWORD IN PRODUCTION!
+user pdf_service on >pdf_service_pwd +@all ~pdf:* ~job:* -@dangerous
+
+# Main backend user with restricted permissions
+# CHANGE THIS PASSWORD IN PRODUCTION!
+user main_backend on >main_backend_pwd +@read +@write +@pubsub ~pdf:* ~job:* -@dangerous
+
+# Admin user with full access (for maintenance)
+# CHANGE THIS PASSWORD IN PRODUCTION!
+user admin on >admin_pwd +@all
+
+# ACL Log format:
+# user <username> on|off [>password] [~pattern] [+@category] [-@category] [+command|-command]
+#
+# Categories:
+# +@admin     - Administrative commands
+# +@set       - Set operations
+# +@sortedset - Sorted Set operations
+# +@list      - List operations
+# +@hash      - Hash operations
+# +@string    - String operations
+# +@bitmap    - Bitmap operations
+# +@hyperlog  - Hyperlog operations
+# +@geo       - Geo operations
+# +@stream    - Stream operations
+# +@pubsub    - Pub/Sub operations
+# +@admin     - Administrative commands
+# +@fast      - Fast operations
+# +@slow      - Slow operations
+# +@blocking  - Blocking operations
+# +@dangerous - Dangerous operations
+# +@connection- Connection operations
+# +@read      - Read operations
+# +@write     - Write operations
+#
+# Commands:
+# +command    - Allow command
+# -command    - Disallow command
+#
+# Patterns:
+# ~pattern    - Key pattern to allow (e.g., ~pdf:* for all keys starting with "pdf:") 
