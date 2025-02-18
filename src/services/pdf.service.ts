@@ -1,8 +1,7 @@
 import puppeteer from 'puppeteer';
 import { JobData } from '../types';
 import { createPdfStoragePath, validateFilePath } from '../utils/file.utils';
-import { generateInvoiceHTML } from '../templates/invoice.template';
-import { generateProtocolHTML } from '../templates/protocol.template';
+import { templateService } from './template.service';
 
 export async function generatePDF(jobData: JobData): Promise<{
   filePath: string;
@@ -30,11 +29,8 @@ export async function generatePDF(jobData: JobData): Promise<{
   try {
     const page = await browser.newPage();
 
-    // Generate HTML content from template
-    const htmlContent =
-      jobData.type === 'protocol'
-        ? generateProtocolHTML(jobData.data)
-        : generateInvoiceHTML(jobData.data);
+    // Generate HTML content using template service
+    const htmlContent = await templateService.render(jobData);
 
     await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 

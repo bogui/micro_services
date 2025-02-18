@@ -1,0 +1,12 @@
+{{#if customFooter}}
+  {{{customFooter}}}
+{{else}}
+  <div class='footer-content text-center text-gray-500 text-sm mt-8'>
+    {{#if footerText}}
+      <p>{{footerText}}</p>
+    {{/if}}
+    <p class='copyright'>&copy;
+      {{formatDate (now) 'year'}}
+      {{companyDetails.name}}. All rights reserved.</p>
+  </div>
+{{/if}}

@@ -1,0 +1,51 @@
+{{#> base/layout 
+    title=(concat "Protocol " documentNumber)
+    documentType="PROTOCOL"
+    styles=styles
+}}
+    {{#*inline "content"}}
+        {{> components/client-info 
+            title="Recipient"
+            clientDetails=clientDetails
+        }}
+
+        <table class="w-full mb-8">
+            <thead>
+                <tr class="text-left">
+                    <th class="w-[50%] py-3 bg-gray-50 text-primary font-semibold">Description</th>
+                    <th class="w-[20%] py-3 bg-gray-50 text-primary font-semibold text-center">Quantity</th>
+                    <th class="w-[30%] py-3 bg-gray-50 text-primary font-semibold text-right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each items}}
+                <tr class="border-b border-gray-200">
+                    <td class="py-3">{{description}}</td>
+                    <td class="py-3 text-center">{{quantity}}</td>
+                    <td class="py-3 text-right">${{format total}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+
+        <div class="totals float-right w-[300px]">
+            <div class="flex justify-between py-4 text-lg font-bold text-primary border-t-2 border-primary final totals-row">
+                <span>Total Amount</span>
+                <span>${{format total}}</span>
+            </div>
+        </div>
+
+        <div class="signatures clear-both flex justify-between mt-32 pt-5">
+            <div class="signature-block w-[45%]">
+                <div class="signature-line border-t border-gray-200 mt-16 pt-2 text-center text-gray-500">
+                    Provider Signature
+                </div>
+            </div>
+            <div class="signature-block w-[45%]">
+                <div class="signature-line border-t border-gray-200 mt-16 pt-2 text-center text-gray-500">
+                    Recipient Signature
+                </div>
+            </div>
+        </div>
+    {{/inline}}
+{{/base/layout}} 

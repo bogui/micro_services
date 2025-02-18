@@ -1,4 +1,0 @@
-user default off
-user pdf_service on >pdf_service_pwd +@all ~* +@pubsub allchannels -@dangerous
-user main_backend on >main_backend_pwd +@read +@write +@pubsub ~* allchannels -@dangerous
-user admin on >admin_pwd +@all allchannels 

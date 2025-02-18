@@ -1,4 +1,19 @@
 import { redisService } from './services/redis.service';
+import { templateService } from './services/template.service';
+
+async function main() {
+  try {
+    // Initialize template service
+    await templateService.initialize();
+    console.log('Template service initialized');
+
+    // Start Redis service
+    console.log('PDF Generation Service started');
+  } catch (error) {
+    console.error('Failed to initialize services:', error);
+    process.exit(1);
+  }
+}
 
 process.on('SIGTERM', async () => {
   console.log('Received SIGTERM signal. Cleaning up...');
@@ -12,4 +27,7 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-console.log('PDF Generation Service started');
+main().catch(error => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});

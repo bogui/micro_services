@@ -1,0 +1,88 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-primary: #2563eb;
+  --color-primary-light: #60a5fa;
+  --color-primary-dark: #1d4ed8;
+
+  --spacing-invoice-margin: 40px;
+
+  --text-invoice-title: 32px;
+  --text-invoice-subtitle: 18px;
+}
+
+/*
+  The default border color has changed to `currentColor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+}
+
+@utility document-header {
+  @apply flex justify-between mb-10 pb-5 border-b-2 border-gray-200;
+}
+@utility company-details {
+  @apply max-w-[50%];
+}
+@utility document-info {
+  @apply text-right;
+}
+@utility client-details {
+  @apply my-8;
+}
+@utility items-table {
+  @apply w-full mb-8;
+
+  & th {
+    @apply py-3 bg-gray-50 text-primary font-semibold;
+  }
+
+  & td {
+    @apply py-3 border-b border-gray-200;
+  }
+}
+@utility totals {
+  @apply float-right w-[300px];
+}
+@utility totals-row {
+  @apply flex justify-between py-2 border-b border-gray-200;
+
+  &.final {
+    @apply py-4 text-lg font-bold text-primary border-t-2 border-primary mt-2;
+  }
+}
+@utility final {
+  &.totals-row {
+    @apply py-4 text-lg font-bold text-primary border-t-2 border-primary mt-2;
+  }
+}
+@utility signatures {
+  @apply clear-both flex justify-between mt-32 pt-5;
+}
+@utility signature-block {
+  @apply w-[45%];
+}
+@utility signature-line {
+  @apply border-t border-gray-200 mt-16 pt-2 text-center text-gray-500;
+}
+
+@layer utilities {
+  /* Print-specific styles */
+  @page {
+    margin: 0;
+    size: A4;
+  }
+
+  /* Custom styles */
+}
