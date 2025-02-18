@@ -16,11 +16,21 @@ describe('Template Service', () => {
     // Mock fs.access to simulate CSS file exists
     (fs.access as jest.Mock).mockResolvedValue(undefined);
 
+    // Mock path.join to handle paths correctly
+    (path.join as jest.Mock).mockImplementation((...paths: string[]) => {
+      // Remove process.cwd() from the path if it exists
+      const filteredPaths = paths.map(p => p.replace(process.cwd(), ''));
+      return filteredPaths.join('/').replace(/\\/g, '/');
+    });
+
     templateService = new TemplateService();
 
     // Mock file system operations
     const mockTemplates: Record<string, string> = {
-      '/dist/templates/styles/main.css': 'body { margin: 0; }',
+      '/dist/templates/styles/main.css': `
+        /* Mock Tailwind CSS utilities */
+        .font-sans { font-family: sans-serif; }
+      `,
       '/src/templates/base/layout.hbs': `
         <!DOCTYPE html>
         <html>
@@ -192,13 +202,6 @@ describe('Template Service', () => {
         {{/base/layout}}
       `,
     };
-
-    // Mock path.join to return predictable paths
-    (path.join as jest.Mock).mockImplementation((...paths: string[]) => {
-      // Remove 'process.cwd()' from the path if it exists
-      const filteredPaths = paths.map(p => p.replace(process.cwd(), ''));
-      return filteredPaths.join('/').replace(/\\/g, '/');
-    });
 
     // Mock path.resolve to handle absolute paths
     (path.resolve as jest.Mock).mockImplementation((...paths: string[]) => {
