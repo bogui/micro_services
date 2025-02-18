@@ -1,14 +1,111 @@
+jest.mock('puppeteer', () => ({
+  launch: jest.fn(),
+}));
+jest.mock('fs/promises');
+jest.mock('path', () => ({
+  join: (...paths: string[]) => paths.join('/'),
+  resolve: (...paths: string[]) => {
+    const joined = paths.join('/');
+    return joined.startsWith('/') ? joined : `/${joined}`;
+  },
+  normalize: (path: string) => path.replace(/\\/g, '/').replace(/\/+/g, '/'),
+  basename: (path: string) => path.split('/').pop() ?? '',
+}));
+jest.mock('../../config', () => ({
+  config: {
+    storagePath: '/test/pdfs',
+    cacheDuration: 2592000,
+    maxConcurrentJobs: 10,
+    jobTimeout: 300,
+    redisUrl: 'redis://localhost:6379',
+  },
+}));
+
 import { generatePDF } from '../../services/pdf.service';
 import { mockJobData } from '../setup';
-import puppeteer, { Browser, Page } from 'puppeteer';
 import fs from 'fs/promises';
-
-jest.mock('puppeteer');
-jest.mock('fs/promises');
+import { templateService } from '../../services/template.service';
 
 describe('PDF Service', () => {
-  let mockBrowser: jest.Mocked<Browser>;
-  let mockPage: jest.Mocked<Page>;
+  let mockBrowser: { newPage: jest.Mock; close: jest.Mock };
+  let mockPage: { setContent: jest.Mock; pdf: jest.Mock; close: jest.Mock };
+  const mockPuppeteer = jest.requireMock('puppeteer');
+
+  beforeAll(async () => {
+    // Mock file system operations for template service
+    const mockTemplates = new Map([
+      ['main.css', 'body { margin: 0; }'],
+      [
+        'layout.hbs',
+        `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>{{title}}</title>
+          <style>{{{styles}}}</style>
+        </head>
+        <body>
+          {{> content }}
+        </body>
+        </html>
+      `,
+      ],
+      ['header.hbs', '<div>{{companyDetails.name}}</div>'],
+      ['footer.hbs', '<div>Footer</div>'],
+      ['company-info.hbs', '<div>{{company.name}}</div>'],
+      ['client-info.hbs', '<div>{{clientDetails.name}}</div>'],
+      [
+        'invoice/index.hbs',
+        `
+        {{#> base/layout title=(concat "Invoice " documentNumber)}}
+          {{#*inline "content"}}
+            <div>Invoice #{{invoiceNumber}}</div>
+            <div>{{companyDetails.name}}</div>
+            <div>{{clientDetails.name}}</div>
+            <div class="totals">
+              <div>Subtotal: \${{format subtotal}}</div>
+              <div>Tax: \${{format tax}}</div>
+              <div>Total: \${{format total}}</div>
+            </div>
+            <div>Thank you for your business!</div>
+          {{/inline}}
+        {{/base/layout}}
+      `,
+      ],
+      [
+        'protocol/index.hbs',
+        `
+        {{#> base/layout title=(concat "Protocol " documentNumber)}}
+          {{#*inline "content"}}
+            <div>Protocol #{{invoiceNumber}}</div>
+            <div>{{companyDetails.name}}</div>
+            <div>{{clientDetails.name}}</div>
+            <div>Provider Signature</div>
+            <div>Recipient Signature</div>
+          {{/inline}}
+        {{/base/layout}}
+      `,
+      ],
+    ]);
+
+    // Mock fs.access and fs.readFile for template initialization
+    (fs.access as jest.Mock).mockResolvedValue(undefined);
+    (fs.readFile as jest.Mock).mockImplementation(async (filePath: string) => {
+      const fileName = filePath.split('/').pop() ?? '';
+      const templatePath = fileName.includes('index.hbs')
+        ? `${filePath.split('/').slice(-2).join('/')}`
+        : fileName;
+      const content = mockTemplates.get(templatePath);
+
+      if (content === undefined) {
+        throw new Error(`Mock template not found: ${templatePath}`);
+      }
+      return content;
+    });
+
+    // Initialize template service
+    await templateService.initialize();
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -17,14 +114,14 @@ describe('PDF Service', () => {
       setContent: jest.fn(),
       pdf: jest.fn().mockResolvedValue(undefined),
       close: jest.fn(),
-    } as any;
+    };
 
     mockBrowser = {
       newPage: jest.fn().mockResolvedValue(mockPage),
       close: jest.fn(),
-    } as any;
+    };
 
-    (puppeteer.launch as jest.Mock).mockResolvedValue(mockBrowser);
+    mockPuppeteer.launch.mockResolvedValue(mockBrowser);
     (fs.mkdir as jest.Mock).mockResolvedValue(undefined);
   });
 
@@ -34,7 +131,7 @@ describe('PDF Service', () => {
       type: 'invoice',
     });
 
-    expect(puppeteer.launch).toHaveBeenCalledWith({
+    expect(mockPuppeteer.launch).toHaveBeenCalledWith({
       headless: true,
       args: [
         '--no-sandbox',

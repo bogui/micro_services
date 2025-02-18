@@ -1,0 +1,12 @@
+<div class="company-details max-w-[50%]">
+    {{> components/company-info company=companyDetails}}
+</div>
+
+<div class="document-info text-right">
+    <h1 class="text-invoice-title text-primary mb-2">{{documentType}}</h1>
+    <p class="text-invoice-subtitle text-gray-900 mb-1">#{{documentNumber}}</p>
+    <p class="text-gray-600">
+        Date: {{date}}<br>
+        {{#if dueDate}}Due Date: {{dueDate}}{{/if}}
+    </p>
+</div> 

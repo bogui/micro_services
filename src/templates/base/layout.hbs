@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <style>
+        {{{styles}}}
+    </style>
+    {{#if customStyles}}
+    <style>
+        {{{customStyles}}}
+    </style>
+    {{/if}}
+</head>
+<body class="font-sans text-gray-900 p-invoice-margin">
+    <div class="document-header flex justify-between mb-10 pb-5 border-b-2 border-gray-200">
+        {{> header}}
+    </div>
+
+    <div class="document-content">
+        {{> content }}
+    </div>
+
+    <div class="document-footer mt-15">
+        {{> footer}}
+    </div>
+</body>
+</html> 

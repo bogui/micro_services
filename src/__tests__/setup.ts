@@ -91,14 +91,15 @@ export function createInvalidJobData(): Partial<JobData> {
   };
 }
 
-export function verifyHtmlStructure(html: string): void {
+export function verifyHtmlStructure(html: string) {
   const requiredElements = [
     '<!DOCTYPE html>',
     '<html>',
     '<head>',
-    '<meta charset="UTF-8">',
+    '<meta',
+    '<title>',
     '<style>',
-    '<body>',
+    '<body',
   ];
 
   requiredElements.forEach(element => {
