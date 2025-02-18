@@ -5,9 +5,105 @@ import {
   extractTextContent,
 } from '../setup';
 import { JobData } from '../../types';
+import fs from 'fs/promises';
+import path from 'path';
+
+jest.mock('fs/promises', () => ({
+  ...jest.requireActual('fs/promises'),
+  access: jest.fn(),
+  readFile: jest.fn(),
+}));
+jest.mock('path', () => ({
+  ...jest.requireActual('path'),
+  join: jest.fn(),
+}));
 
 describe('Template Generation', () => {
   beforeAll(async () => {
+    // Mock fs.access to simulate CSS file exists
+    (fs.access as jest.Mock).mockResolvedValue(undefined);
+
+    // Mock path.join to use actual path.join for templates but handle CSS path
+    (path.join as jest.Mock).mockImplementation((...paths: string[]) => {
+      const actualPath = jest.requireActual('path').join(...paths);
+      // Only modify paths for the CSS file
+      if (actualPath.includes('dist/templates/styles/main.css')) {
+        return '/dist/templates/styles/main.css';
+      }
+      return actualPath;
+    });
+
+    // Mock fs.readFile only for CSS file
+    (fs.readFile as jest.Mock).mockImplementation(async (filePath: string) => {
+      const actualFs = jest.requireActual('fs/promises');
+
+      if (filePath.includes('dist/templates/styles/main.css')) {
+        return `
+          /* Base styles */
+          .font-sans { font-family: sans-serif; }
+          .text-gray-900 { color: #1a202c; }
+          .text-gray-600 { color: #718096; }
+          .text-primary { color: #2563eb; }
+          
+          /* Layout */
+          .flex { display: flex; }
+          .justify-between { justify-content: space-between; }
+          .items-center { align-items: center; }
+          .max-w-[50%] { max-width: 50%; }
+          .w-full { width: 100%; }
+          
+          /* Spacing */
+          .p-invoice-margin { padding: 40px; }
+          .mb-10 { margin-bottom: 2.5rem; }
+          .mb-8 { margin-bottom: 2rem; }
+          .mb-2 { margin-bottom: 0.5rem; }
+          .mb-1 { margin-bottom: 0.25rem; }
+          .mt-15 { margin-top: 3.75rem; }
+          .my-8 { margin: 2rem 0; }
+          .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+          .pb-5 { padding-bottom: 1.25rem; }
+          
+          /* Typography */
+          .text-lg { font-size: 1.125rem; }
+          .text-sm { font-size: 0.875rem; }
+          .font-bold { font-weight: 700; }
+          .font-semibold { font-weight: 600; }
+          .text-right { text-align: right; }
+          .text-center { text-align: center; }
+          
+          /* Borders */
+          .border-b-2 { border-bottom-width: 2px; }
+          .border-gray-200 { border-color: #edf2f7; }
+          .border-t-2 { border-top-width: 2px; }
+          .border-primary { border-color: #2563eb; }
+          
+          /* Background */
+          .bg-gray-50 { background-color: #f9fafb; }
+          
+          /* Document specific */
+          .text-invoice-title { font-size: 32px; }
+          .text-invoice-subtitle { font-size: 18px; }
+          
+          /* Table styles */
+          .items-table th {
+            padding: 0.75rem;
+            background-color: #f9fafb;
+            color: #2563eb;
+            font-weight: 600;
+            text-align: left;
+          }
+          
+          .items-table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid #edf2f7;
+          }
+        `;
+      }
+
+      // For all other files, use the actual fs.readFile
+      return actualFs.readFile(filePath, 'utf-8');
+    });
+
     await templateService.initialize();
   });
 
