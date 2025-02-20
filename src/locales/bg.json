@@ -1,0 +1,35 @@
+{
+  "invoice": {
+    "title": "Фактура",
+    "client": "Клиент",
+    "clientDetails": "Детайли на клиента",
+    "description": "Описание",
+    "quantity": "Количество",
+    "unitPrice": "Ед. цена",
+    "total": "Общо",
+    "date": "Дата",
+    "dueDate": "Краен срок за плащане",
+    "subtotal": "Данъчна основа",
+    "tax": "ДДС"
+  },
+  "protocol": {
+    "description": "Описание",
+    "quantity": "Количество",
+    "total": "Общо",
+    "totalAmount": "Общо сума",
+    "providerSignature": "Подпис на доставчика",
+    "recipientSignature": "Подпис на получателя"
+  },
+  "company": {
+    "email": "Email",
+    "phone": "Телефон"
+  },
+  "footer": {
+    "allRightsReserved": "Всички права запазени.",
+    "thankYou": "Благодарим ви за поръчката!"
+  },
+  "Bill To": "Клиент",
+  "INVOICE": "Фактура",
+  "PROTOCOL": "Протокол",
+  "Recipient": "Получател"
+}

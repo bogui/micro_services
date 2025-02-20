@@ -1,34 +1,34 @@
 services:
-  pdf-service:
-    build: .
-    volumes:
-      - ./pdfs:/app/pdfs
-    environment:
-      - REDIS_URL=redis://${SERVICE_USER}:${SERVICE_PASSWORD}@redis:6379
-      - STORAGE_PATH=/app/pdfs
-      - MAX_CONCURRENT_JOBS=10
-      - JOB_TIMEOUT=300
-      - CACHE_DURATION=2592000
-      - NODE_ENV=production
-    depends_on:
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
-    init: true
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
-    read_only: true
-    tmpfs:
-      - /tmp
-    networks:
-      - pdf-network
-    user: '1000:1000'
+  # pdf-service:
+  #   build: .
+  #   volumes:
+  #     - ./pdfs:/app/pdfs
+  #   environment:
+  #     - REDIS_URL=redis://${SERVICE_USER}:${SERVICE_PASSWORD}@redis:6379
+  #     - STORAGE_PATH=/app/pdfs
+  #     - MAX_CONCURRENT_JOBS=10
+  #     - JOB_TIMEOUT=300
+  #     - CACHE_DURATION=2592000
+  #     - NODE_ENV=production
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
+  #   init: true
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   cap_drop:
+  #     - ALL
+  #   cap_add:
+  #     - CHOWN
+  #     - SETGID
+  #     - SETUID
+  #   read_only: true
+  #   tmpfs:
+  #     - /tmp
+  #   networks:
+  #     - pdf-network
+  #   user: '1000:1000'
 
   redis:
     image: redis:7-alpine
@@ -37,6 +37,8 @@ services:
     command: redis-server --aclfile /etc/redis/redis.acl --requirepass pdf_service_pwd --maxmemory 512mb --maxmemory-policy allkeys-lru --appendonly yes --appendfsync everysec
     ports:
       - '6379:6379'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     volumes:
       - redis-data:/data
       - ./redis.acl:/etc/redis/redis.acl:ro
@@ -69,19 +71,19 @@ services:
     networks:
       - pdf-network
 
-  redisinsight:
-    image: redislabs/redisinsight:latest
-    container_name: pdf_service_redisinsight
-    ports:
-      - '5540:5540'
-    volumes:
-      - ./redisinsight:/redisinsight
-    networks:
-      - pdf-network
-    depends_on:
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
+  # redisinsight:
+  #   image: redislabs/redisinsight:latest
+  #   container_name: pdf_service_redisinsight
+  #   ports:
+  #     - '5540:5540'
+  #   volumes:
+  #     - ./redisinsight:/redisinsight
+  #   networks:
+  #     - pdf-network
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #   restart: unless-stopped
 
 volumes:
   redis-data:

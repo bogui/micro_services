@@ -7,7 +7,7 @@ import {
 import { JobData } from '../../types';
 import fs from 'fs/promises';
 import path from 'path';
-
+import translate from '../../helpers/translate.helper';
 jest.mock('fs/promises', () => ({
   ...jest.requireActual('fs/promises'),
   access: jest.fn(),
@@ -167,7 +167,10 @@ describe('Template Generation', () => {
       describe('Invoice details', () => {
         it('should include invoice metadata', async () => {
           const { invoiceNumber, date, dueDate } = mockInvoiceData;
-          [invoiceNumber, date, dueDate].forEach(value => {
+          let dateString = new Date(date).toLocaleDateString('bg');
+          let dueDateString = new Date(dueDate).toLocaleDateString('bg');
+
+          [invoiceNumber, dateString, dueDateString].forEach(value => {
             expect(textContent).toContain(value);
           });
         });
@@ -177,7 +180,12 @@ describe('Template Generation', () => {
         it('should include table headers', async () => {
           const headers = ['Description', 'Quantity', 'Unit Price', 'Total'];
           headers.forEach(header => {
-            expect(textContent).toContain(header);
+            expect(textContent).toContain(
+              translate(
+                `invoice.${header.charAt(0).toLowerCase() + header.slice(1).replace(/\s+(.)/g, (_, c) => c.toUpperCase())}`,
+                'bg',
+              ),
+            );
           });
         });
 
@@ -201,7 +209,9 @@ describe('Template Generation', () => {
           ];
 
           totals.forEach(([label, value]) => {
-            expect(textContent).toContain(label);
+            expect(textContent).toContain(
+              translate(`invoice.${label.toLowerCase()}`, 'bg'),
+            );
             expect(html).toContain(value.toFixed(2));
           });
         });
@@ -269,15 +279,19 @@ describe('Template Generation', () => {
       describe('Document info', () => {
         it('should include document number and dates', async () => {
           expect(textContent).toContain(mockInvoiceData.invoiceNumber);
-          expect(textContent).toContain(mockInvoiceData.date);
+          expect(textContent).toContain(
+            new Date(mockInvoiceData.date).toLocaleDateString('bg'),
+          );
         });
       });
 
       describe('Items table', () => {
         it('should include table headers', async () => {
-          expect(textContent).toContain('Description');
-          expect(textContent).toContain('Quantity');
-          expect(textContent).toContain('Total');
+          expect(textContent).toContain(
+            translate('protocol.description', 'bg'),
+          );
+          expect(textContent).toContain(translate('protocol.quantity', 'bg'));
+          expect(textContent).toContain(translate('protocol.total', 'bg'));
         });
 
         it('should include all items', async () => {
@@ -291,17 +305,23 @@ describe('Template Generation', () => {
 
       describe('Total section', () => {
         it('should only include final total', async () => {
-          expect(textContent).toContain('Total Amount');
+          expect(textContent).toContain(translate('invoice.total', 'bg'));
           expect(textContent).toContain(mockInvoiceData.total.toString());
-          expect(textContent).not.toContain('Subtotal');
-          expect(textContent).not.toContain('Tax');
+          expect(textContent).not.toContain(
+            translate('invoice.subtotal', 'bg'),
+          );
+          expect(textContent).not.toContain(translate('invoice.tax', 'bg'));
         });
       });
 
       describe('Signature section', () => {
         it('should include signature blocks', async () => {
-          expect(textContent).toContain('Provider Signature');
-          expect(textContent).toContain('Recipient Signature');
+          expect(textContent).toContain(
+            translate('protocol.providerSignature', 'bg'),
+          );
+          expect(textContent).toContain(
+            translate('protocol.recipientSignature', 'bg'),
+          );
         });
       });
     });

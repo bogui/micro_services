@@ -1,6 +1,8 @@
 export interface JobData {
   jobId: string;
   invoiceId: string;
+  locale?: string;
+  currency?: string;
   type?: 'invoice' | 'protocol'; // Optional, defaults to "invoice" if not specified
   data: InvoiceData;
   customStyles?: string; // Optional custom CSS styles
