@@ -167,8 +167,8 @@ describe('Template Generation', () => {
       describe('Invoice details', () => {
         it('should include invoice metadata', async () => {
           const { invoiceNumber, date, dueDate } = mockInvoiceData;
-          let dateString = new Date(date).toLocaleDateString('bg');
-          let dueDateString = new Date(dueDate).toLocaleDateString('bg');
+          const dateString = new Date(date).toLocaleDateString('bg');
+          const dueDateString = new Date(dueDate).toLocaleDateString('bg');
 
           [invoiceNumber, dateString, dueDateString].forEach(value => {
             expect(textContent).toContain(value);
