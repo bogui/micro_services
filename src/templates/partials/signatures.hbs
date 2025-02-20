@@ -1,0 +1,30 @@
+<div class='flex justify-between mb-8'>
+  <div class='w-1/2 pr-4'>
+    <table class='w-full'>
+      <tr>
+        <th class='text-left'>{{t (concat type '.signatures.recipient')}}:</th>
+        <td></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>{{recipient.name}}</td>
+      </tr>
+    </table>
+  </div>
+  <div class='w-1/2 pl-4'>
+    <table class='w-full'>
+      <tr>
+        <th class='text-left'>{{t (concat type '.signatures.supplier')}}:</th>
+        <td>{{supplier.title}}</td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>{{supplier.name}}</td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<div class='text-center text-xs mt-8'>
+  <p>{{t 'footer.legalNotice'}}</p>
+</div>

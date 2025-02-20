@@ -64,42 +64,42 @@ describe('Validation Utils', () => {
     });
 
     describe('Company details validation', () => {
-      it('should throw for missing company fields', () => {
+      it('should throw for missing supplier fields', () => {
         const requiredFields = ['name', 'address', 'email', 'phone'];
 
         requiredFields.forEach(field => {
-          const companyDetails = { ...mockJobData.data.companyDetails };
-          delete (companyDetails as any)[field];
+          const supplier = { ...mockJobData.data.supplier };
+          delete (supplier as any)[field];
 
           const invalidData = createMockJobData({
             data: createMockInvoiceData({
-              companyDetails,
+              supplier,
             }),
           });
 
           expect(() => validateJobData(invalidData)).toThrow(
-            /Invalid or missing company/,
+            /Invalid or missing supplier/,
           );
         });
       });
     });
 
     describe('Client details validation', () => {
-      it('should throw for missing client fields', () => {
-        const requiredFields = ['name', 'address', 'email'];
+      it('should throw for missing recipient fields', () => {
+        const requiredFields = ['name', 'address', 'email', 'phone'];
 
         requiredFields.forEach(field => {
-          const clientDetails = { ...mockJobData.data.clientDetails };
-          delete (clientDetails as any)[field];
+          const recipient = { ...mockJobData.data.recipient };
+          delete (recipient as any)[field];
 
           const invalidData = createMockJobData({
             data: createMockInvoiceData({
-              clientDetails,
+              recipient,
             }),
           });
 
           expect(() => validateJobData(invalidData)).toThrow(
-            /Invalid or missing client/,
+            /Invalid or missing recipient/,
           );
         });
       });
@@ -122,27 +122,33 @@ describe('Validation Utils', () => {
           {
             description: 'invalid quantity',
             item: {
+              number: 1,
               description: 'Test',
+              unit: 'pcs',
               quantity: -1,
-              unitPrice: 100,
+              price: 100,
               total: 100,
             },
           },
           {
-            description: 'invalid unit price',
+            description: 'invalid price',
             item: {
+              number: 1,
               description: 'Test',
+              unit: 'pcs',
               quantity: 1,
-              unitPrice: -50,
+              price: -50,
               total: 50,
             },
           },
           {
             description: 'mismatched total',
             item: {
+              number: 1,
               description: 'Test',
+              unit: 'pcs',
               quantity: 2,
-              unitPrice: 100,
+              price: 100,
               total: 150,
             },
           },
@@ -163,30 +169,39 @@ describe('Validation Utils', () => {
       it('should validate invoice total calculations', () => {
         const testCases = [
           {
-            description: 'mismatched subtotal',
+            description: 'mismatched tax base',
             data: {
               ...mockJobData.data,
-              subtotal: 100,
-              tax: 20,
-              total: 150,
+              totals: {
+                taxBase: 100,
+                vatAmount: 20,
+                vatAmountReduced: 0,
+                final: 150,
+              },
             },
           },
           {
-            description: 'negative tax',
+            description: 'negative VAT',
             data: {
               ...mockJobData.data,
-              subtotal: 200,
-              tax: -20,
-              total: 180,
+              totals: {
+                taxBase: 200,
+                vatAmount: -20,
+                vatAmountReduced: 0,
+                final: 180,
+              },
             },
           },
           {
-            description: 'incorrect total',
+            description: 'incorrect final total',
             data: {
               ...mockJobData.data,
-              subtotal: 200,
-              tax: 20,
-              total: 250,
+              totals: {
+                taxBase: 200,
+                vatAmount: 20,
+                vatAmountReduced: 0,
+                final: 250,
+              },
             },
           },
         ];

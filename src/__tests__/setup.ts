@@ -1,37 +1,70 @@
 import { JobData, InvoiceData } from '../types';
 
 export const mockInvoiceData: InvoiceData = {
-  invoiceNumber: 'INV-2024-001',
+  documentType: 'Invoice',
+  documentNumber: 'INV-2024-001',
   date: '2024-03-14',
   dueDate: '2024-04-13',
-  companyDetails: {
-    name: 'Test Company Ltd',
-    address: '123 Test Street, Test City, 12345',
-    email: 'contact@testcompany.com',
-    phone: '+1 234-567-8900',
+  recipient: {
+    name: 'Test Client Ltd',
+    vatNumber: 'BG123456789',
+    identNumber: '123456789',
+    city: 'Sofia',
+    address: 'Test Address 123',
+    representative: 'John Doe',
+    email: 'test@client.com',
+    phone: '0888123456',
   },
-  clientDetails: {
-    name: 'Test Client',
-    address: '456 Client Ave, Client City, 54321',
-    email: 'client@example.com',
+  supplier: {
+    name: 'Test Company Ltd',
+    vatNumber: 'BG987654321',
+    identNumber: '987654321',
+    city: 'Sofia',
+    address: 'Company Address 456',
+    representative: 'Jane Smith',
+    email: 'test@company.com',
+    phone: '0888654321',
   },
   items: [
     {
+      number: 1,
       description: 'Test Item 1',
+      unit: 'pcs',
       quantity: 2,
-      unitPrice: 100,
+      price: 100,
       total: 200,
     },
     {
+      number: 2,
       description: 'Test Item 2',
+      unit: 'pcs',
       quantity: 1,
-      unitPrice: 50,
+      price: 50,
       total: 50,
     },
   ],
-  subtotal: 250,
-  tax: 25,
-  total: 275,
+  totals: {
+    taxBase: 250,
+    vatAmount: 50,
+    vatAmountReduced: 1,
+    final: 300,
+  },
+  transaction: {
+    taxEventDate: '2024-03-14',
+    basis: 'Test Basis',
+    description: 'Test Description',
+    location: 'Sofia',
+  },
+  payment: {
+    method: 'Bank Transfer',
+    banks: [
+      {
+        name: 'Test Bank',
+        iban: 'BG12BANK12341234567890',
+        bic: 'TESTBGSF',
+      },
+    ],
+  },
 };
 
 export const mockJobData: JobData = {
@@ -39,31 +72,62 @@ export const mockJobData: JobData = {
   invoiceId: 'INV-2024-001',
   type: 'invoice',
   data: {
-    invoiceNumber: 'INV-2024-001',
+    documentType: 'Invoice',
+    documentNumber: 'INV-2024-001',
     date: '2024-03-14',
     dueDate: '2024-04-13',
-    companyDetails: {
-      name: 'Test Company',
-      address: '123 Test St',
-      email: 'test@example.com',
-      phone: '+1 234-567-8900',
-    },
-    clientDetails: {
+    recipient: {
       name: 'Test Customer',
+      vatNumber: 'BG123456789',
+      identNumber: '123456789',
+      city: 'Sofia',
       address: '123 Test St',
+      representative: 'John Doe',
       email: 'test@example.com',
+      phone: '0888123456',
+    },
+    supplier: {
+      name: 'Test Company',
+      vatNumber: 'BG987654321',
+      identNumber: '987654321',
+      city: 'Sofia',
+      address: '123 Test St',
+      representative: 'Jane Smith',
+      email: 'test@example.com',
+      phone: '0888654321',
     },
     items: [
       {
+        number: 1,
         description: 'Test Item 1',
+        unit: 'pcs',
         quantity: 2,
-        unitPrice: 100,
+        price: 100,
         total: 200,
       },
     ],
-    subtotal: 200,
-    tax: 38,
-    total: 238,
+    totals: {
+      taxBase: 200,
+      vatAmount: 38,
+      vatAmountReduced: 0,
+      final: 238,
+    },
+    transaction: {
+      taxEventDate: '2024-03-14',
+      basis: 'Test Basis',
+      description: 'Test Description',
+      location: 'Sofia',
+    },
+    payment: {
+      method: 'Bank Transfer',
+      banks: [
+        {
+          name: 'Test Bank',
+          iban: 'BG12BANK12341234567890',
+          bic: 'TESTBGSF',
+        },
+      ],
+    },
   },
 };
 
@@ -94,7 +158,7 @@ export function createInvalidJobData(): Partial<JobData> {
 export function verifyHtmlStructure(html: string) {
   const requiredElements = [
     '<!DOCTYPE html>',
-    '<html>',
+    '<html',
     '<head>',
     '<meta',
     '<title>',

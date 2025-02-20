@@ -10,6 +10,72 @@ jest.mock('path');
 describe('Template Service', () => {
   let templateService: TemplateService;
 
+  const sampleData: JobData = {
+    jobId: 'test-123',
+    invoiceId: 'INV-001',
+    type: 'invoice' as const,
+    locale: 'bg',
+    currency: 'BGN',
+    data: {
+      documentType: 'Invoice',
+      documentNumber: '0000000123',
+      date: '2024-03-20',
+      dueDate: '2024-04-19',
+      recipient: {
+        name: 'Test Client Ltd',
+        vatNumber: 'BG123456789',
+        identNumber: '123456789',
+        city: 'Sofia',
+        address: 'Test Address 123',
+        representative: 'John Doe',
+        email: 'test@client.com',
+        phone: '0888123456',
+      },
+      supplier: {
+        name: 'Test Company Ltd',
+        vatNumber: 'BG987654321',
+        identNumber: '987654321',
+        city: 'Sofia',
+        address: 'Company Address 456',
+        representative: 'Jane Smith',
+        email: 'test@company.com',
+        phone: '0888654321',
+      },
+      items: [
+        {
+          number: 1,
+          description: 'Test Item',
+          unit: 'pcs',
+          quantity: 1,
+          price: 100,
+          total: 100,
+        },
+      ],
+      totals: {
+        taxBase: 100,
+        vatAmount: 20,
+        vatAmountReduced: 0,
+        final: 120,
+      },
+      transaction: {
+        taxEventDate: '2024-03-20',
+        basis: 'Test Basis',
+        description: 'Test Description',
+        location: 'Sofia',
+      },
+      payment: {
+        method: 'Bank Transfer',
+        banks: [
+          {
+            name: 'Test Bank',
+            iban: 'BG12BANK12341234567890',
+            bic: 'TESTBGSF',
+          },
+        ],
+      },
+    },
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -31,175 +97,261 @@ describe('Template Service', () => {
         /* Mock Tailwind CSS utilities */
         .font-sans { font-family: sans-serif; }
       `,
-      '/src/templates/base/layout.hbs': `
+      '/src/templates/partials/layout.hbs': `
         <!DOCTYPE html>
-        <html>
+        <html lang="{{locale}}">
         <head>
             <meta charset="UTF-8">
-            <title>{{title}}</title>
+            <title>{{t title}} - {{documentNumber}}</title>
             <style>{{{styles}}}</style>
             {{#if customStyles}}
             <style>{{{customStyles}}}</style>
             {{/if}}
         </head>
         <body class="font-sans text-gray-900 p-invoice-margin">
-            <div class="document-header flex justify-between mb-10 pb-5 border-b-2 border-gray-200">
-                {{> header}}
-            </div>
-            <div class="document-content">
-                {{> content}}
-            </div>
-            <div class="document-footer mt-15">
-                {{> footer}}
-            </div>
+            {{> @partial-block }}
         </body>
         </html>
       `,
-      '/src/templates/base/header.hbs': `
-        <div class="company-details">
-            {{> components/company-info company=companyDetails}}
+      '/src/templates/partials/header.hbs': `
+        <div class="text-center mb-8">
+          <h1 class="text-2xl mb-2">{{t (concat type '.title')}}</h1>
+          <h3 class="text-lg">{{t (concat type '.original')}}</h3>
         </div>
-        <div class="document-info">
-            <h1 class="text-invoice-title text-primary mb-2">{{documentType}}</h1>
-            <p class="text-invoice-subtitle text-gray-900 mb-1">#{{documentNumber}}</p>
-            <p class="text-gray-600">
-                Date: {{date}}<br>
-                {{#if dueDate}}Due Date: {{dueDate}}{{/if}}
-            </p>
-        </div>
-      `,
-      '/src/templates/base/footer.hbs': `
-        {{#if customFooter}}
-          {{{customFooter}}}
-        {{else}}
-          <div class='footer-content text-center text-gray-500 text-sm mt-8'>
-              {{#if footerText}}
-                <p>{{footerText}}</p>
-              {{/if}}
-              <p class='copyright'>&copy; {{formatDate (now) 'year'}} {{companyDetails.name}}. All rights reserved.</p>
+        <div class="flex justify-between mb-6">
+          <div class="self-end">
+            <p>{{t (concat type '.number')}}: <span class="font-bold">{{documentNumber}}</span></p>
           </div>
-        {{/if}}
+          <table>
+            <tr>
+              <td>{{t (concat type '.date')}}:</td>
+              <td>{{formatDate date}}</td>
+            </tr>
+            {{#if (eq type 'invoice')}}
+              <tr>
+                <td>{{t (concat type '.dueDate')}}:</td>
+                <td>{{formatDate dueDate}}</td>
+              </tr>
+            {{/if}}
+          </table>
+        </div>
       `,
-      '/src/templates/components/company-info.hbs': `
-        <h2 class='text-xl font-semibold mb-2'>{{company.name}}</h2>
-        <p class='text-gray-600'>{{company.address}}</p>
-        <p class='text-gray-600'>Email: {{company.email}}</p>
-        <p class='text-gray-600'>Phone: {{company.phone}}</p>
+      '/src/templates/partials/company-details.hbs': `
+        <div class="grid grid-cols-2 gap-4 mb-12">
+          <div class="border border-gray-300 p-4">
+            <table class="w-full">
+              <tr>
+                <th>{{t 'invoice.recipient.title'}}</th>
+                <td>{{recipient.name}}</td>
+              </tr>
+              <tr>
+                <th>{{t 'invoice.recipient.vat'}}</th>
+                <td>{{recipient.vatNumber}}</td>
+              </tr>
+              <tr>
+                <th>{{t 'invoice.recipient.id'}}</th>
+                <td>{{recipient.identNumber}}</td>
+              </tr>
+              <tr>
+                <th>{{t 'invoice.recipient.city'}}</th>
+                <td>{{recipient.city}}</td>
+              </tr>
+              <tr>
+                <th>{{t 'invoice.recipient.address'}}</th>
+                <td>{{recipient.address}}</td>
+              </tr>
+              <tr>
+                <th>{{t 'invoice.recipient.representative'}}</th>
+                <td>{{recipient.representative}}</td>
+              </tr>
+            </table>
+          </div>
+          <div class="border border-gray-300 p-4">
+            <table class="w-full">
+              <tr>
+                <th>{{t 'invoice.supplier.title'}}</th>
+                <td>{{supplier.name}}</td>
+              </tr>
+              <tr>
+                <th>{{t 'invoice.supplier.vat'}}</th>
+                <td>{{supplier.vatNumber}}</td>
+              </tr>
+              <tr>
+                <th>{{t 'invoice.supplier.id'}}</th>
+                <td>{{supplier.identNumber}}</td>
+              </tr>
+              <tr>
+                <th>{{t 'invoice.supplier.city'}}</th>
+                <td>{{supplier.city}}</td>
+              </tr>
+              <tr>
+                <th>{{t 'invoice.supplier.address'}}</th>
+                <td>{{supplier.address}}</td>
+              </tr>
+              <tr>
+                <th>{{t 'invoice.supplier.representative'}}</th>
+                <td>{{supplier.representative}}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
       `,
-      '/src/templates/components/client-info.hbs': `
-        <div class='client-details'>
-          <h3 class='text-lg text-primary mb-2 pb-1 border-b border-gray-200'>{{title}}</h3>
-          <p class='font-semibold'>{{clientDetails.name}}</p>
-          <p class='text-gray-600'>{{clientDetails.address}}</p>
-          <p class='text-gray-600'>Email: {{clientDetails.email}}</p>
+      '/src/templates/partials/items-table.hbs': `
+        <div class="mb-8">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="border p-2 text-left">{{t (concat type '.itemNumber')}}</th>
+                <th class="border p-2 text-left">{{t (concat type '.description')}}</th>
+                <th class="border p-2 text-left">{{t (concat type '.unit')}}</th>
+                <th class="border p-2 text-right">{{t (concat type '.quantity')}}</th>
+                <th class="border p-2 text-right">{{t (concat type '.price')}}</th>
+                <th class="border p-2 text-right">{{t (concat type '.total')}}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{#each items}}
+                <tr>
+                  <td class="border p-2">{{number}}</td>
+                  <td class="border p-2">{{description}}</td>
+                  <td class="border p-2">{{unit}}</td>
+                  <td class="border p-2 text-right">{{format quantity}}</td>
+                  <td class="border p-2 text-right">{{format price ../currency}}</td>
+                  <td class="border p-2 text-right">{{format total ../currency}}</td>
+                </tr>
+              {{/each}}
+            </tbody>
+            {{#if (eq type 'invoice')}}
+              <tfoot>
+                <tr>
+                  <td colspan="5" class="border p-2 text-right font-bold">{{t 'invoice.totals.taxBase'}}:</td>
+                  <td class="border p-2 text-right">{{format totals.taxBase currency}}</td>
+                </tr>
+                <tr>
+                  <td colspan="5" class="border p-2 text-right font-bold">{{t 'invoice.totals.vatAmount'}}:</td>
+                  <td class="border p-2 text-right">{{format totals.vatAmount currency}}</td>
+                </tr>
+                <tr>
+                  <td colspan="5" class="border p-2 text-right font-bold">{{t 'invoice.totals.vatAmountReduced'}}:</td>
+                  <td class="border p-2 text-right">{{format totals.vatAmountReduced currency}}</td>
+                </tr>
+                <tr>
+                  <td colspan="5" class="border p-2 text-right font-bold">{{t 'invoice.totals.final'}}:</td>
+                  <td class="border p-2 text-right font-bold">{{format totals.final currency}}</td>
+                </tr>
+              </tfoot>
+            {{else}}
+              <tfoot>
+                <tr>
+                  <td colspan="5" class="border p-2 text-right font-bold">{{t 'protocol.totals.final'}}:</td>
+                  <td class="border p-2 text-right font-bold">{{format totals.final currency}}</td>
+                </tr>
+              </tfoot>
+            {{/if}}
+          </table>
         </div>
       `,
       '/src/templates/invoice/index.hbs': `
-        {{#> base/layout 
-            title=(concat "Invoice " documentNumber)
-            documentType="INVOICE"
-            styles=styles
-        }}
-            {{#*inline "content"}}
-                {{> components/client-info 
-                    title="Bill To"
-                    clientDetails=clientDetails
-                }}
-
-                <table class="w-full mb-8">
-                    <thead>
-                        <tr class="text-left">
-                            <th class="w-[40%] py-3 bg-gray-50 text-primary font-semibold">Description</th>
-                            <th class="w-[20%] py-3 bg-gray-50 text-primary font-semibold text-center">Quantity</th>
-                            <th class="w-[20%] py-3 bg-gray-50 text-primary font-semibold text-right">Unit Price</th>
-                            <th class="w-[20%] py-3 bg-gray-50 text-primary font-semibold text-right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#each items}}
-                        <tr class="border-b border-gray-200">
-                            <td class="py-3">{{description}}</td>
-                            <td class="py-3 text-center">{{quantity}}</td>
-                            <td class="py-3 text-right">\${{format unitPrice}}</td>
-                            <td class="py-3 text-right">\${{format total}}</td>
-                        </tr>
-                        {{/each}}
-                    </tbody>
-                </table>
-
-                <div class="totals float-right w-[300px]">
-                    <div class="flex justify-between py-2 border-b border-gray-200">
-                        <span>Subtotal</span>
-                        <span>\${{format subtotal}}</span>
-                    </div>
-                    <div class="flex justify-between py-2 border-b border-gray-200">
-                        <span>Tax</span>
-                        <span>\${{format tax}}</span>
-                    </div>
-                    <div class="flex justify-between py-4 text-lg font-bold text-primary border-t-2 border-primary mt-2">
-                        <span>Total</span>
-                        <span>\${{format total}}</span>
-                    </div>
-                </div>
-
-                <div class="footer clear-both text-center text-gray-500 text-sm mt-16">
-                    <p>Thank you for your business!</p>
-                </div>
-            {{/inline}}
-        {{/base/layout}}
+        {{#> layout title=(concat type '.title') documentNumber=documentNumber}}
+          <div class="document invoice">
+            {{> header 
+                type='invoice' 
+                documentType=documentType 
+                documentNumber=documentNumber
+                date=date
+                dueDate=dueDate
+            }}
+            {{> company-details 
+                type='invoice' 
+                recipient=recipient 
+                supplier=supplier
+            }}
+            {{> items-table 
+                type='invoice'
+                items=items
+                totals=totals
+                currency=currency
+            }}
+            {{> transaction-details 
+                type='invoice'
+                transaction=transaction
+                payment=payment
+            }}
+            {{> signatures 
+                type='invoice' 
+                recipient=recipient 
+                supplier=supplier
+            }}
+          </div>
+        {{/layout}}
       `,
       '/src/templates/protocol/index.hbs': `
-        {{#> base/layout 
-            title=(concat "Protocol " documentNumber)
-            documentType="PROTOCOL"
-            styles=styles
-        }}
-            {{#*inline "content"}}
-                {{> components/client-info 
-                    title="Recipient"
-                    clientDetails=clientDetails
-                }}
-
-                <table class="w-full mb-8">
-                    <thead>
-                        <tr class="text-left">
-                            <th class="w-[50%] py-3 bg-gray-50 text-primary font-semibold">Description</th>
-                            <th class="w-[20%] py-3 bg-gray-50 text-primary font-semibold text-center">Quantity</th>
-                            <th class="w-[30%] py-3 bg-gray-50 text-primary font-semibold text-right">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#each items}}
-                        <tr class="border-b border-gray-200">
-                            <td class="py-3">{{description}}</td>
-                            <td class="py-3 text-center">{{quantity}}</td>
-                            <td class="py-3 text-right">\${{format total}}</td>
-                        </tr>
-                        {{/each}}
-                    </tbody>
-                </table>
-
-                <div class="totals float-right w-[300px]">
-                    <div class="flex justify-between py-4 text-lg font-bold text-primary border-t-2 border-primary final totals-row">
-                        <span>Total Amount</span>
-                        <span>\${{format total}}</span>
-                    </div>
-                </div>
-
-                <div class="signatures clear-both flex justify-between mt-32 pt-5">
-                    <div class="signature-block">
-                        <div class="signature-line border-t border-gray-200 mt-16 pt-2 text-center text-gray-500">
-                            Provider Signature
-                        </div>
-                    </div>
-                    <div class="signature-block">
-                        <div class="signature-line border-t border-gray-200 mt-16 pt-2 text-center text-gray-500">
-                            Recipient Signature
-                        </div>
-                    </div>
-                </div>
-            {{/inline}}
-        {{/base/layout}}
+        {{#> layout title=(concat type '.title') documentNumber=documentNumber}}
+          <div class="document protocol">
+            {{> header 
+                type='protocol' 
+                documentNumber=documentNumber
+                date=date
+            }}
+            {{> company-details 
+                type='protocol' 
+                recipient=recipient 
+                supplier=supplier
+            }}
+            {{> items-table 
+                type='protocol'
+                items=items
+                totals=totals
+                currency=currency
+            }}
+            {{> signatures 
+                type='protocol' 
+                recipient=recipient 
+                supplier=supplier
+            }}
+          </div>
+        {{/layout}}
+      `,
+      '/src/templates/partials/transaction-details.hbs': `
+        <div class="mb-8">
+          <table class="w-full">
+            <tr>
+              <th class="text-left">{{t 'invoice.taxEventDate'}}:</th>
+              <td>{{formatDate data.transaction.taxEventDate}}</td>
+            </tr>
+            <tr>
+              <th class="text-left">{{t 'invoice.basis'}}:</th>
+              <td>{{data.transaction.basis}}</td>
+            </tr>
+            <tr>
+              <th class="text-left">{{t 'invoice.description'}}:</th>
+              <td>{{data.transaction.description}}</td>
+            </tr>
+            <tr>
+              <th class="text-left">{{t 'invoice.location'}}:</th>
+              <td>{{data.transaction.location}}</td>
+            </tr>
+            <tr>
+              <th class="text-left">{{t 'invoice.payment'}}:</th>
+              <td>{{data.payment.method}}</td>
+            </tr>
+          </table>
+        </div>
+      `,
+      '/src/templates/partials/signatures.hbs': `
+        <div class="mt-12 grid grid-cols-2 gap-4">
+          <div>
+            <p class="font-bold mb-2">{{t (concat type '.recipient')}}:</p>
+            <div class="h-16 border-b border-gray-300"></div>
+          </div>
+          <div>
+            <p class="font-bold mb-2">{{t (concat type '.supplier')}}:</p>
+            <div class="h-16 border-b border-gray-300"></div>
+          </div>
+        </div>
+        <div class="mt-8 text-sm text-gray-600">
+          <p>{{t 'invoice.disclaimer'}}</p>
+        </div>
       `,
     };
 
@@ -225,24 +377,56 @@ describe('Template Service', () => {
     await templateService.initialize();
   });
 
+  describe('Service Initialization', () => {
+    it('should initialize successfully with all required templates', async () => {
+      expect(templateService).toBeDefined();
+      await expect(templateService.initialize()).resolves.not.toThrow();
+    });
+
+    it('should throw error if CSS file is missing', async () => {
+      (fs.access as jest.Mock).mockRejectedValueOnce(
+        new Error('File not found'),
+      );
+      const newService = new TemplateService();
+      await expect(newService.initialize()).rejects.toThrow(
+        'Compiled CSS file not found',
+      );
+    });
+
+    it('should throw error if required template is missing', async () => {
+      (fs.readFile as jest.Mock).mockRejectedValueOnce(
+        new Error('Template not found'),
+      );
+      const newService = new TemplateService();
+      await expect(newService.initialize()).rejects.toThrow();
+    });
+  });
+
   describe('Template Helpers', () => {
     describe('format helper', () => {
       it('should format numbers with default currency', () => {
-        templateService.setCurrency('USD');
-        templateService.setLocale('en');
+        templateService.setCurrency('BGN');
+        templateService.setLocale('bg');
 
         const template = Handlebars.compile('{{format number}}');
         const result = template({ number: 42.5 });
-        expect(result).toBe('$42.50');
+        expect(result).toBe('42.50 лв.');
       });
 
       it('should format numbers with custom currency', () => {
         templateService.setCurrency('EUR');
         templateService.setLocale('en');
 
-        const template = Handlebars.compile('{{format number "€"}}');
+        const template = Handlebars.compile('{{format number}}');
         const result = template({ number: 42.5 });
         expect(result).toBe('€42.50');
+      });
+
+      it('should throw error for invalid number', () => {
+        const template = Handlebars.compile('{{format value}}');
+        expect(() => template({ value: 'not a number' })).toThrow(
+          'Value must be a number',
+        );
       });
     });
 
@@ -268,235 +452,116 @@ describe('Template Service', () => {
       });
     });
 
-    describe('math helper', () => {
-      it('should perform basic math operations', () => {
-        const template = Handlebars.compile(`
-                    {{math 'add' a b}}|{{math 'subtract' a b}}|{{math 'multiply' a b}}|{{math 'divide' a b}}
-                `);
-        const result = template({ a: 10, b: 2 }).trim().split('|');
-        expect(result).toEqual(['12', '8', '20', '5']);
+    describe('translation helper', () => {
+      it('should translate keys correctly', () => {
+        templateService.setLocale('bg');
+        const template = Handlebars.compile('{{t "invoice.title"}}');
+        const result = template({});
+        expect(result).toBe('Фактура');
       });
 
-      it('should handle invalid operations', () => {
-        const template = Handlebars.compile('{{math "invalid" a b}}');
-        const result = template({ a: 10, b: 2 });
-        expect(result).toBe('10');
-      });
-    });
-
-    describe('string helpers', () => {
-      it('should concatenate strings', () => {
-        const template = Handlebars.compile('{{concat a b c}}');
-        const result = template({ a: 'Hello', b: ' ', c: 'World' });
-        expect(result).toBe('Hello World');
-      });
-
-      it('should transform case', () => {
-        const template = Handlebars.compile(
-          '{{uppercase str}} {{lowercase str}}',
-        );
-        const result = template({ str: 'Hello World' });
-        expect(result).toBe('HELLO WORLD hello world');
+      it('should fallback to bg locale if translation not found', () => {
+        templateService.setLocale('invalid');
+        const template = Handlebars.compile('{{t "invoice.title"}}');
+        const result = template({});
+        expect(result).toBe('Фактура');
       });
     });
 
-    describe('conditional helper', () => {
-      it('should render content conditionally', () => {
+    describe('conditional helpers', () => {
+      it('should handle when helper correctly', () => {
         const template = Handlebars.compile('{{when condition value}}');
         expect(template({ condition: true, value: 'yes' })).toBe('yes');
         expect(template({ condition: false, value: 'yes' })).toBe('');
       });
-    });
 
-    describe('array helper', () => {
-      it('should sum array values', () => {
-        const template = Handlebars.compile('{{sum array}}');
-        const result = template({ array: [1, 2, 3, 4, 5] });
-        expect(result).toBe('15');
+      it('should handle eq helper correctly', () => {
+        const template = Handlebars.compile(
+          '{{#if (eq a b)}}equal{{else}}not equal{{/if}}',
+        );
+        expect(template({ a: 1, b: 1 })).toBe('equal');
+        expect(template({ a: 1, b: 2 })).toBe('not equal');
       });
     });
   });
 
-  describe('Template Validation', () => {
-    it('should validate correct template structure', async () => {
-      const validTemplate = `
-        {{#> base/layout
-          title=(concat "Custom " documentNumber)
-          documentType=documentType
-          styles=styles
-        }}
-          {{#*inline "content"}}
-            <div class="document">
-              <h1>{{documentType}}</h1>
-              <div>Document Number: {{documentNumber}}</div>
-              <div class="client">{{client.name}}</div>
-              <div class="items">
-                {{#each items}}
-                  <div>{{this.description}}</div>
-                {{/each}}
-              </div>
-            </div>
-          {{/inline}}
-        {{/base/layout}}
-      `;
-
-      await expect(
-        templateService.loadCustomTemplate('valid', validTemplate),
-      ).resolves.not.toThrow();
+  describe('Template Rendering', () => {
+    it('should render invoice template successfully', async () => {
+      const html = await templateService.render(sampleData);
+      expect(html).toContain('<!DOCTYPE html>');
+      expect(html).toContain(sampleData.data.documentNumber);
+      expect(html).toContain(sampleData.data.recipient.name);
+      expect(html).toContain(sampleData.data.supplier.name);
     });
 
-    it('should reject template with invalid handlebars syntax', async () => {
-      const invalidTemplate = `
-        {{#> base/layout
-          title=(concat "Custom " documentNumber)
-          documentType=documentType
-          styles=styles
-        }}
-          {{#*inline "content"}}
-            <div>{{documentType}}</div>
-            <div>{{documentNumber}}</div>
-            <div>{{client.name}}</div>
-            {{#each items}}
-              <div>{{this.description}}</div>
-            {{/items}}
-          {{/inline}}
-        {{/base/layout}}
-      `;
+    it('should render protocol template successfully', async () => {
+      const protocolData: JobData = {
+        ...sampleData,
+        type: 'protocol' as const,
+      };
+      const html = await templateService.render(protocolData);
+      expect(html).toContain('<!DOCTYPE html>');
+      expect(html).toContain(protocolData.data.documentNumber);
+      expect(html).toContain(protocolData.data.recipient.name);
+      expect(html).toContain(protocolData.data.supplier.name);
+    });
 
+    it('should apply custom styles when provided', async () => {
+      const customStyles = '.custom-class { color: red; }';
+      const html = await templateService.render({
+        ...sampleData,
+        customStyles,
+      });
+      expect(html).toContain(customStyles);
+    });
+
+    it('should throw error for invalid template type', async () => {
+      const invalidData = { ...sampleData, type: 'invalid' };
       await expect(
-        templateService.loadCustomTemplate('invalid', invalidTemplate),
-      ).rejects.toThrow(/Template compilation error/);
+        templateService.render(invalidData as JobData),
+      ).rejects.toThrow('Template not found');
     });
   });
 
-  describe('Custom Template Integration', () => {
-    it('should load and render custom template', async () => {
-      const customTemplate = `
-        {{#> base/layout
-          title=(concat "Custom " documentNumber)
-          documentType=documentType
-          styles=styles
-        }}
-          {{#*inline "content"}}
-            <div class="document">
-              <h1>{{documentType}}</h1>
-              <div>Document Number: {{documentNumber}}</div>
-              <div class="client">{{clientDetails.name}}</div>
-              <div class="items">
-                {{#each items}}
-                  <div>{{this.description}}</div>
-                {{/each}}
-              </div>
-            </div>
-          {{/inline}}
-        {{/base/layout}}
-      `;
+  describe('Custom Template Loading', () => {
+    const validTemplate = `
+      {{#> layout title='Custom Template'}}
+        {{> header type='invoice'}}
+        <div class="custom-content">
+          <h1>{{documentType}}</h1>
+          <div>Document Number: {{documentNumber}}</div>
+          <div class="client">{{client.name}}</div>
+        </div>
+      {{/layout}}
+    `;
 
-      const jobData: JobData = {
-        jobId: 'test-job',
-        invoiceId: 'INV-001',
-        type: 'invoice',
-        customTemplate: 'custom',
-        data: {
-          documentType: 'INVOICE',
-          documentNumber: 'INV-001',
-          invoiceNumber: 'INV-001',
-          date: '2024-03-20',
-          dueDate: '2024-04-19',
-          companyDetails: {
-            name: 'Test Company',
-            address: '123 Test St',
-            phone: '123-456-7890',
-            email: 'test@company.com',
-          },
-          clientDetails: {
-            name: 'Test Client',
-            address: '456 Client St',
-            email: 'client@test.com',
-          },
-          items: [
-            {
-              description: 'Test Item',
-              quantity: 1,
-              unitPrice: 100,
-              total: 100,
-            },
-          ],
-          subtotal: 100,
-          tax: 20,
-          total: 120,
-        },
-      };
-
-      await templateService.loadCustomTemplate('custom', customTemplate);
-      const result = await templateService.render(jobData);
-      expect(result).toContain('Test Client');
-      expect(result).toContain('Test Item');
+    it('should load valid custom template', async () => {
+      await expect(
+        templateService.loadCustomTemplate('custom', validTemplate),
+      ).resolves.not.toThrow();
     });
 
-    it('should apply custom styles', async () => {
-      const customTemplate = `
-        {{#> base/layout
-          title=(concat "Custom " documentNumber)
-          documentType=documentType
-          styles=styles
-        }}
-          {{#*inline "content"}}
-            <div class="document">
-              <h1>{{documentType}}</h1>
-              <div>Document Number: {{documentNumber}}</div>
-              <div class="client">{{clientDetails.name}}</div>
-              <div class="items">
-                {{#each items}}
-                  <div>{{this.description}}</div>
-                {{/each}}
-              </div>
-            </div>
-          {{/inline}}
-        {{/base/layout}}
+    it('should reject invalid template syntax', async () => {
+      const invalidTemplate = `
+        {{#> layout}}
+          {{#each items}}
+            <div>{{this.description}}</div>
+          {{/invalid}}
+        {{/layout}}
       `;
+      await expect(
+        templateService.loadCustomTemplate('invalid', invalidTemplate),
+      ).rejects.toThrow();
+    });
 
-      const customStyles = '.custom-class { color: red; }';
-      const jobData: JobData = {
-        jobId: 'test-job',
-        invoiceId: 'INV-001',
-        type: 'invoice',
+    it('should render custom template successfully', async () => {
+      await templateService.loadCustomTemplate('custom', validTemplate);
+      const html = await templateService.render({
+        ...sampleData,
         customTemplate: 'custom',
-        data: {
-          documentType: 'INVOICE',
-          documentNumber: 'INV-001',
-          invoiceNumber: 'INV-001',
-          date: '2024-03-20',
-          dueDate: '2024-04-19',
-          companyDetails: {
-            name: 'Test Company',
-            address: '123 Test St',
-            phone: '123-456-7890',
-            email: 'test@company.com',
-          },
-          clientDetails: {
-            name: 'Test Client',
-            address: '456 Client St',
-            email: 'client@test.com',
-          },
-          items: [
-            {
-              description: 'Test Item',
-              quantity: 1,
-              unitPrice: 100,
-              total: 100,
-            },
-          ],
-          subtotal: 100,
-          tax: 20,
-          total: 120,
-        },
-        customStyles,
-      };
-
-      await templateService.loadCustomTemplate('custom', customTemplate);
-      const result = await templateService.render(jobData);
-      expect(result).toContain(customStyles);
+      });
+      expect(html).toContain('<!DOCTYPE html>');
+      expect(html).toContain('Custom Template');
     });
   });
 });

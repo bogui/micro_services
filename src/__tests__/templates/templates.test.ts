@@ -114,7 +114,7 @@ describe('Template Generation', () => {
     beforeEach(async () => {
       const jobData: JobData = {
         jobId: 'test-job-123',
-        invoiceId: mockInvoiceData.invoiceNumber,
+        invoiceId: mockInvoiceData.documentNumber,
         type: 'invoice',
         data: mockInvoiceData,
       };
@@ -148,43 +148,66 @@ describe('Template Generation', () => {
     describe('Content validation', () => {
       describe('Company details', () => {
         it('should include all company information', async () => {
-          const { companyDetails } = mockInvoiceData;
-          Object.values(companyDetails).forEach(value => {
-            expect(textContent).toContain(value);
+          const { supplier } = mockInvoiceData;
+          const requiredFields = [
+            'name',
+            'vatNumber',
+            'identNumber',
+            'city',
+            'address',
+            'representative',
+          ];
+          requiredFields.forEach(field => {
+            expect(textContent).toContain(
+              supplier[field as keyof typeof supplier],
+            );
           });
         });
       });
 
       describe('Client details', () => {
         it('should include all client information', async () => {
-          const { clientDetails } = mockInvoiceData;
-          Object.values(clientDetails).forEach(value => {
-            expect(textContent).toContain(value);
+          const { recipient } = mockInvoiceData;
+          const requiredFields = [
+            'name',
+            'vatNumber',
+            'identNumber',
+            'city',
+            'address',
+            'representative',
+          ];
+          requiredFields.forEach(field => {
+            expect(textContent).toContain(
+              recipient[field as keyof typeof recipient],
+            );
           });
         });
       });
 
       describe('Invoice details', () => {
         it('should include invoice metadata', async () => {
-          const { invoiceNumber, date, dueDate } = mockInvoiceData;
-          const dateString = new Date(date).toLocaleDateString('bg');
-          const dueDateString = new Date(dueDate).toLocaleDateString('bg');
-
-          [invoiceNumber, dateString, dueDateString].forEach(value => {
-            expect(textContent).toContain(value);
-          });
+          const { documentNumber } = mockInvoiceData;
+          expect(textContent).toContain(documentNumber);
+          expect(textContent).toContain(translate('invoice.title', 'bg'));
+          expect(textContent).toContain(translate('invoice.number', 'bg'));
+          expect(textContent).toContain(translate('invoice.date', 'bg'));
+          expect(textContent).toContain(translate('invoice.dueDate', 'bg'));
         });
       });
 
       describe('Items table', () => {
         it('should include table headers', async () => {
-          const headers = ['Description', 'Quantity', 'Unit Price', 'Total'];
+          const headers = [
+            'number',
+            'description',
+            'unit',
+            'quantity',
+            'price',
+            'total',
+          ];
           headers.forEach(header => {
             expect(textContent).toContain(
-              translate(
-                `invoice.${header.charAt(0).toLowerCase() + header.slice(1).replace(/\s+(.)/g, (_, c) => c.toUpperCase())}`,
-                'bg',
-              ),
+              translate(`invoice.table.${header}`, 'bg'),
             );
           });
         });
@@ -192,8 +215,8 @@ describe('Template Generation', () => {
         it('should include all item details', async () => {
           mockInvoiceData.items.forEach(item => {
             expect(textContent).toContain(item.description);
-            expect(textContent).toContain(item.quantity.toString());
-            expect(html).toContain(item.unitPrice.toFixed(2));
+            expect(html).toContain(item.quantity.toString());
+            expect(html).toContain(item.price.toFixed(2));
             expect(html).toContain(item.total.toFixed(2));
           });
         });
@@ -201,18 +224,20 @@ describe('Template Generation', () => {
 
       describe('Totals section', () => {
         it('should include all total values', async () => {
-          const { subtotal, tax, total } = mockInvoiceData;
-          const totals: [string, number][] = [
-            ['Subtotal', subtotal],
-            ['Tax', tax],
-            ['Total', total],
+          const { totals } = mockInvoiceData;
+          const totalsFields = [
+            'taxBase',
+            'vatAmount',
+            'vatAmountReduced',
+            'final',
           ];
-
-          totals.forEach(([label, value]) => {
+          totalsFields.forEach(field => {
             expect(textContent).toContain(
-              translate(`invoice.${label.toLowerCase()}`, 'bg'),
+              translate(`invoice.totals.${field}`, 'bg'),
             );
-            expect(html).toContain(value.toFixed(2));
+            expect(html).toContain(
+              totals[field as keyof typeof totals].toFixed(2),
+            );
           });
         });
       });
@@ -226,7 +251,7 @@ describe('Template Generation', () => {
     beforeEach(async () => {
       const jobData: JobData = {
         jobId: 'test-job-123',
-        invoiceId: mockInvoiceData.invoiceNumber,
+        invoiceId: mockInvoiceData.documentNumber,
         type: 'protocol',
         data: mockInvoiceData,
       };
@@ -237,6 +262,7 @@ describe('Template Generation', () => {
 
     describe('Structure validation', () => {
       it('should have valid HTML structure', async () => {
+        console.log(html);
         expect(() => verifyHtmlStructure(html)).not.toThrow();
       });
 
@@ -260,25 +286,45 @@ describe('Template Generation', () => {
     describe('Content validation', () => {
       describe('Company details', () => {
         it('should include all company information', async () => {
-          const { companyDetails } = mockInvoiceData;
-          Object.values(companyDetails).forEach(value => {
-            expect(textContent).toContain(value);
+          const { supplier } = mockInvoiceData;
+          const requiredFields = [
+            'name',
+            'vatNumber',
+            'identNumber',
+            'city',
+            'address',
+            'representative',
+          ];
+          requiredFields.forEach(field => {
+            expect(textContent).toContain(
+              supplier[field as keyof typeof supplier],
+            );
           });
         });
       });
 
       describe('Client details', () => {
         it('should include all client information', async () => {
-          const { clientDetails } = mockInvoiceData;
-          Object.values(clientDetails).forEach(value => {
-            expect(textContent).toContain(value);
+          const { recipient } = mockInvoiceData;
+          const requiredFields = [
+            'name',
+            'vatNumber',
+            'identNumber',
+            'city',
+            'address',
+            'representative',
+          ];
+          requiredFields.forEach(field => {
+            expect(textContent).toContain(
+              recipient[field as keyof typeof recipient],
+            );
           });
         });
       });
 
       describe('Document info', () => {
         it('should include document number and dates', async () => {
-          expect(textContent).toContain(mockInvoiceData.invoiceNumber);
+          expect(textContent).toContain(mockInvoiceData.documentNumber);
           expect(textContent).toContain(
             new Date(mockInvoiceData.date).toLocaleDateString('bg'),
           );
@@ -287,11 +333,9 @@ describe('Template Generation', () => {
 
       describe('Items table', () => {
         it('should include table headers', async () => {
-          expect(textContent).toContain(
-            translate('protocol.description', 'bg'),
-          );
-          expect(textContent).toContain(translate('protocol.quantity', 'bg'));
-          expect(textContent).toContain(translate('protocol.total', 'bg'));
+          expect(textContent).toContain(translate('protocol.original', 'bg'));
+          expect(textContent).toContain(translate('protocol.number', 'bg'));
+          expect(textContent).toContain(translate('protocol.date', 'bg'));
         });
 
         it('should include all items', async () => {
@@ -305,22 +349,31 @@ describe('Template Generation', () => {
 
       describe('Total section', () => {
         it('should only include final total', async () => {
-          expect(textContent).toContain(translate('invoice.total', 'bg'));
-          expect(textContent).toContain(mockInvoiceData.total.toString());
-          expect(textContent).not.toContain(
-            translate('invoice.subtotal', 'bg'),
+          expect(textContent).toContain(
+            translate('protocol.totals.final', 'bg'),
           );
-          expect(textContent).not.toContain(translate('invoice.tax', 'bg'));
+          expect(textContent).toContain(
+            mockInvoiceData.totals.final.toString(),
+          );
+          expect(textContent).not.toContain(
+            translate('invoice.totals.taxBase', 'bg'),
+          );
+          expect(textContent).not.toContain(
+            translate('invoice.totals.vatAmount', 'bg'),
+          );
+          expect(textContent).not.toContain(
+            translate('invoice.totals.vatAmountReduced', 'bg'),
+          );
         });
       });
 
       describe('Signature section', () => {
         it('should include signature blocks', async () => {
           expect(textContent).toContain(
-            translate('protocol.providerSignature', 'bg'),
+            translate('protocol.signatures.supplier', 'bg'),
           );
           expect(textContent).toContain(
-            translate('protocol.recipientSignature', 'bg'),
+            translate('protocol.signatures.recipient', 'bg'),
           );
         });
       });

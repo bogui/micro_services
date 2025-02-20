@@ -43,7 +43,8 @@ export class TemplateService {
 
   public setLocale(locale: string) {
     if (!locales.includes(locale)) {
-      throw new Error(`Invalid locale: ${locale}`);
+      this.locale = 'bg';
+      return;
     }
 
     this.locale = locale;
@@ -51,7 +52,8 @@ export class TemplateService {
 
   public setCurrency(currency: string) {
     if (!currencies.some(c => c.code === currency)) {
-      throw new Error(`Invalid currency: ${currency}`);
+      this.currency = 'BGN';
+      return;
     }
 
     this.currency = currency;
@@ -123,24 +125,58 @@ export class TemplateService {
       },
     );
 
-    // Format numbers to 2 decimal places with currency symbol
+    // Format numbers with currency
     Handlebars.registerHelper(
       'format',
-      (
-        value: number,
-        _currencyOrOptions: string | Handlebars.HelperOptions = '$',
-      ) => {
-        const currency = currencies.find(c => c.code === this.currency);
+      (value: number, currencyCode?: string | Handlebars.HelperOptions) => {
+        // If currencyCode is options object, use default currency
+        const code =
+          typeof currencyCode === 'string' ? currencyCode : this.currency;
+        const currency = currencies.find(c => c.code === code);
 
         if (!currency) {
-          throw new Error(`Currency not found: ${this.currency}`);
+          throw new Error(`Currency not found: ${code}`);
+        }
+
+        if (value === undefined || value === null) {
+          return '0.00';
+        }
+
+        const numValue = typeof value === 'number' ? value : Number(value);
+        if (isNaN(numValue)) {
+          throw new Error(
+            'Value must be a number or a string that can be converted to a number',
+          );
         }
 
         return currency.position === 'before'
-          ? `${currency.symbol}${value.toFixed(2)}`
-          : `${value.toFixed(2)} ${currency.symbol}`;
+          ? `${currency.symbol}${numValue.toFixed(2)}`
+          : `${numValue.toFixed(2)} ${currency.symbol}`;
       },
     );
+
+    // Alias format as formatCurrency for clarity
+    Handlebars.registerHelper(
+      'formatCurrency',
+      function (value: number, currencyCode: string) {
+        return Handlebars.helpers['format'](value, currencyCode);
+      },
+    );
+
+    // Format numbers without currency
+    Handlebars.registerHelper('formatNumber', (value: number) => {
+      if (value === undefined || value === null) {
+        return '0.00';
+      }
+
+      const numValue = typeof value === 'number' ? value : Number(value);
+      if (isNaN(numValue)) {
+        throw new Error(
+          'Value must be a number or a string that can be converted to a number',
+        );
+      }
+      return numValue.toFixed(2);
+    });
 
     // String concatenation
     Handlebars.registerHelper('concat', (...args: unknown[]) => {
@@ -174,8 +210,8 @@ export class TemplateService {
     });
 
     // Translation helper
-    Handlebars.registerHelper('t', (key: string) => {
-      return translate(key, this.locale);
+    Handlebars.registerHelper('t', (text: string) => {
+      return translate(text, this.locale);
     });
 
     // Math operations
@@ -206,10 +242,14 @@ export class TemplateService {
     Handlebars.registerHelper('uppercase', (str: string) => str.toUpperCase());
     Handlebars.registerHelper('lowercase', (str: string) => str.toLowerCase());
 
-    // Format numbers as currency
-    // Handlebars.registerHelper('format', (value: number) => {
-    //   return value.toFixed(2);
-    // });
+    // Comparison helper
+    Handlebars.registerHelper('eq', function (a: any, b: any) {
+      return a === b;
+    });
+
+    Handlebars.registerHelper('ne', function (a: any, b: any) {
+      return a !== b;
+    });
   }
 
   async initialize() {
@@ -242,43 +282,50 @@ export class TemplateService {
   private async loadPartials() {
     const baseDir = path.join(process.cwd(), 'src/templates');
 
-    // Load base partials
+    // Load layout partial
+    const layoutTemplate = await fs.readFile(
+      path.join(baseDir, 'partials/layout.hbs'),
+      'utf-8',
+    );
+    Handlebars.registerPartial('layout', layoutTemplate);
+
+    // Load invoice partials
     const headerTemplate = await fs.readFile(
-      path.join(baseDir, 'base/header.hbs'),
+      path.join(baseDir, 'partials/header.hbs'),
       'utf-8',
     );
     Handlebars.registerPartial('header', headerTemplate);
 
-    const footerTemplate = await fs.readFile(
-      path.join(baseDir, 'base/footer.hbs'),
+    const companyDetailsTemplate = await fs.readFile(
+      path.join(baseDir, 'partials/company-details.hbs'),
       'utf-8',
     );
-    Handlebars.registerPartial('footer', footerTemplate);
+    Handlebars.registerPartial('company-details', companyDetailsTemplate);
 
-    // Load component partials
-    const companyInfoTemplate = await fs.readFile(
-      path.join(baseDir, 'components/company-info.hbs'),
+    const itemsTableTemplate = await fs.readFile(
+      path.join(baseDir, 'partials/items-table.hbs'),
       'utf-8',
     );
-    Handlebars.registerPartial('components/company-info', companyInfoTemplate);
+    Handlebars.registerPartial('items-table', itemsTableTemplate);
 
-    const clientInfoTemplate = await fs.readFile(
-      path.join(baseDir, 'components/client-info.hbs'),
+    const transactionDetailsTemplate = await fs.readFile(
+      path.join(baseDir, 'partials/transaction-details.hbs'),
       'utf-8',
     );
-    Handlebars.registerPartial('components/client-info', clientInfoTemplate);
+    Handlebars.registerPartial(
+      'transaction-details',
+      transactionDetailsTemplate,
+    );
+
+    const signaturesTemplate = await fs.readFile(
+      path.join(baseDir, 'partials/signatures.hbs'),
+      'utf-8',
+    );
+    Handlebars.registerPartial('signatures', signaturesTemplate);
   }
 
   private async loadTemplates() {
     const baseDir = path.join(process.cwd(), 'src/templates');
-
-    // Load base layout
-    const layoutTemplate = await fs.readFile(
-      path.join(baseDir, 'base/layout.hbs'),
-      'utf-8',
-    );
-    this.templates.set('base/layout', Handlebars.compile(layoutTemplate));
-    Handlebars.registerPartial('base/layout', layoutTemplate);
 
     // Load document templates
     const invoiceTemplate = await fs.readFile(
@@ -318,17 +365,15 @@ export class TemplateService {
         ? `${this.styles}\n${jobData.customStyles}`
         : this.styles;
 
-      const data = {
+      const context = {
         ...jobData.data,
-        documentNumber:
-          jobData.data.documentNumber ?? jobData.data.invoiceNumber,
+        type: templateName,
         styles: combinedStyles,
-        clientDetails: jobData.data.clientDetails,
-        companyDetails: jobData.data.companyDetails,
-        items: jobData.data.items,
+        locale: this.locale,
+        currency: this.currency,
       };
 
-      return template(data);
+      return template(context);
     } catch (error) {
       console.error(`Error rendering template ${templateName}:`, error);
       throw error;
@@ -378,26 +423,18 @@ export class TemplateService {
     // Check for required base layout
     const normalizedContent = content.replace(/\s+/g, ' ').trim();
     if (
-      !normalizedContent.includes('{{#> base/layout') &&
-      !normalizedContent.includes('{{#extend "base/layout"')
+      !normalizedContent.includes('{{#> layout') &&
+      !normalizedContent.includes('{{#extend "layout"')
     ) {
-      errors.push('Template must extend base/layout');
-    }
-
-    // Check for required content block
-    if (
-      !content.includes('{{#*inline "content"}}') &&
-      !content.includes('{{#content "body"}}')
-    ) {
-      errors.push('Template must define a content block');
+      errors.push('Template must extend layout');
     }
 
     // Check for basic structure
     const requiredElements = ['documentType', 'documentNumber'];
 
-    // Check for client information (either client or clientDetails)
-    if (!content.includes('client.') && !content.includes('clientDetails.')) {
-      errors.push('Template must include client information');
+    // Check for client information (either recipient or client)
+    if (!content.includes('recipient.') && !content.includes('client.')) {
+      errors.push('Template must include recipient information');
     }
 
     requiredElements.forEach(element => {

@@ -107,32 +107,74 @@ const sampleData: JobData = {
   currency: 'BGN',
   data: {
     documentType: 'Invoice',
-    documentNumber: 'INV-001',
-    invoiceNumber: 'INV-001',
+    documentNumber: '0000000123',
     date: new Date().toISOString(),
     dueDate: new Date().toISOString(),
-    subtotal: 200,
-    tax: 40,
-    total: 240,
-    clientDetails: {
-      name: 'Sample Client',
-      address: 'Sample Address',
-      email: 'sample@client.com',
+    recipient: {
+      name: 'ТОП МАН - ЕООД',
+      vatNumber: 'BG117610653',
+      identNumber: '117610653',
+      city: 'София',
+      address: 'ул. "Васил Левски" 123',
+      representative: 'Иван Иванов',
+      email: 'ivan@topman.bg',
+      phone: '0888 123 456',
     },
-    companyDetails: {
-      phone: '123-456-7890',
-      name: 'Your Company',
-      address: 'Company Address',
-      email: 'company@example.com',
+    supplier: {
+      name: 'Кей енд Ди Консулт ООД',
+      vatNumber: 'BG205255868',
+      identNumber: '205255868',
+      city: 'Русе',
+      address: 'бул. ген. Скобелев 48',
+      representative: 'Богомил Кръстев',
+      email: 'office@knd.bg',
+      phone: '0888 888 888',
     },
     items: [
       {
-        description: 'Sample Item 1',
-        quantity: 2,
-        unitPrice: 100,
-        total: 200,
+        number: 1,
+        description: 'Абонаментна поддръжка за период 08.03.2024-07.04.2024',
+        unit: 'месец',
+        quantity: 1,
+        price: 99.99,
+        total: 99.99,
+      },
+      {
+        number: 2,
+        description: 'Консултантски услуги',
+        unit: 'час',
+        quantity: 5,
+        price: 79.95,
+        total: 399.75,
       },
     ],
+    totals: {
+      taxBase: 499.74,
+      vatAmount: 99.95,
+      vatAmountReduced: 0,
+      final: 599.69,
+    },
+    transaction: {
+      taxEventDate: new Date().toISOString(),
+      basis: 'Договор за абонаментна поддръжка №123/2024',
+      description: 'Абонаментна поддръжка и консултантски услуги',
+      location: 'Русе',
+    },
+    payment: {
+      method: 'По банков път',
+      banks: [
+        {
+          name: 'Банка 1',
+          iban: 'BG12345678901234567890',
+          bic: 'UNCRBGSF',
+        },
+        {
+          name: 'Банка 2',
+          iban: 'BG09876543210987654321',
+          bic: 'RZBBBGSF',
+        },
+      ],
+    },
   },
 };
 
@@ -153,7 +195,7 @@ app.get('/', async (req, res) => {
   locale = (req.query.locale as string) || 'bg';
   currency = (req.query.currency as string) || 'BGN';
   sampleData.type = 'invoice';
-  sampleData.data.total = 240;
+  sampleData.data.totals.final = 240;
   sampleData.locale = locale;
   sampleData.currency = currency;
 
@@ -179,7 +221,7 @@ app.get('/protocol', async (req, res) => {
   locale = (req.query.locale as string) || 'bg';
   currency = (req.query.currency as string) || 'BGN';
   sampleData.type = 'protocol';
-  sampleData.data.total = 200;
+  sampleData.data.totals.final = 200;
   sampleData.locale = locale;
   sampleData.currency = currency;
 
