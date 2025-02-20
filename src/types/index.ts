@@ -11,34 +11,58 @@ export interface JobData {
 
 export interface InvoiceData {
   documentType?: string; // Optional since it can be derived from job type
-  documentNumber?: string; // Optional since it can be derived from invoiceNumber
-  invoiceNumber: string;
+  documentNumber: string;
   date: string;
   dueDate: string;
-  companyDetails: CompanyDetails;
-  clientDetails: ClientDetails;
+  recipient: CompanyDetails;
+  supplier: CompanyDetails;
   items: InvoiceItem[];
-  subtotal: number;
-  tax: number;
-  total: number;
+  totals: InvoiceTotals;
+  transaction: TransactionDetails;
+  payment: PaymentDetails;
 }
 
 export interface CompanyDetails {
   name: string;
   address: string;
+  city: string;
   email: string;
   phone: string;
-}
-
-export interface ClientDetails {
-  name: string;
-  address: string;
-  email: string;
+  vatNumber: string;
+  identNumber: string;
+  representative: string;
 }
 
 export interface InvoiceItem {
+  number: number;
   description: string;
+  unit: string;
   quantity: number;
-  unitPrice: number;
+  price: number;
   total: number;
+}
+
+export interface InvoiceTotals {
+  taxBase: number;
+  vatAmount: number;
+  vatAmountReduced: number;
+  final: number;
+}
+
+export interface TransactionDetails {
+  taxEventDate: string;
+  basis: string;
+  description: string;
+  location: string;
+}
+
+export interface PaymentDetails {
+  method: string;
+  banks: BankDetails[];
+}
+
+export interface BankDetails {
+  name: string;
+  iban: string;
+  bic: string;
 }

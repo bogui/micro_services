@@ -1,4 +1,4 @@
-import { JobData } from '../types';
+import { JobData, InvoiceData } from '../types';
 
 export class ValidationError extends Error {
   constructor(message: string) {
@@ -31,50 +31,53 @@ export function validateJobData(data: unknown): asserts data is JobData {
     throw new ValidationError('Invalid or missing invoice data');
   }
 
-  const invoiceData = jobData.data;
+  const invoiceData = jobData.data as Partial<InvoiceData>;
 
   // Validate required string fields
-  const requiredStringFields = ['invoiceNumber', 'date', 'dueDate'] as const;
+  if (
+    !invoiceData.documentNumber ||
+    typeof invoiceData.documentNumber !== 'string'
+  ) {
+    throw new ValidationError('Invalid or missing documentNumber');
+  }
 
-  for (const field of requiredStringFields) {
-    if (!invoiceData[field] || typeof invoiceData[field] !== 'string') {
-      throw new ValidationError(`Invalid or missing ${field}`);
+  if (!invoiceData.date || typeof invoiceData.date !== 'string') {
+    throw new ValidationError('Invalid or missing date');
+  }
+
+  if (jobData.type === 'invoice') {
+    if (!invoiceData.dueDate || typeof invoiceData.dueDate !== 'string') {
+      throw new ValidationError('Invalid or missing dueDate');
     }
   }
 
-  // Validate company details
-  if (
-    !invoiceData.companyDetails ||
-    typeof invoiceData.companyDetails !== 'object'
-  ) {
-    throw new ValidationError('Invalid or missing company details');
+  // Validate recipient details
+  if (!invoiceData.recipient || typeof invoiceData.recipient !== 'object') {
+    throw new ValidationError('Invalid or missing recipient details');
   }
 
-  const companyFields = ['name', 'address', 'email', 'phone'] as const;
-  for (const field of companyFields) {
+  const recipientFields = ['name', 'address', 'email', 'phone'] as const;
+  for (const field of recipientFields) {
     if (
-      !invoiceData.companyDetails[field] ||
-      typeof invoiceData.companyDetails[field] !== 'string'
+      !invoiceData.recipient[field] ||
+      typeof invoiceData.recipient[field] !== 'string'
     ) {
-      throw new ValidationError(`Invalid or missing company ${field}`);
+      throw new ValidationError(`Invalid or missing recipient ${field}`);
     }
   }
 
-  // Validate client details
-  if (
-    !invoiceData.clientDetails ||
-    typeof invoiceData.clientDetails !== 'object'
-  ) {
-    throw new ValidationError('Invalid or missing client details');
+  // Validate supplier details
+  if (!invoiceData.supplier || typeof invoiceData.supplier !== 'object') {
+    throw new ValidationError('Invalid or missing supplier details');
   }
 
-  const clientFields = ['name', 'address', 'email'] as const;
-  for (const field of clientFields) {
+  const supplierFields = ['name', 'address', 'email', 'phone'] as const;
+  for (const field of supplierFields) {
     if (
-      !invoiceData.clientDetails[field] ||
-      typeof invoiceData.clientDetails[field] !== 'string'
+      !invoiceData.supplier[field] ||
+      typeof invoiceData.supplier[field] !== 'string'
     ) {
-      throw new ValidationError(`Invalid or missing client ${field}`);
+      throw new ValidationError(`Invalid or missing supplier ${field}`);
     }
   }
 
@@ -98,10 +101,8 @@ export function validateJobData(data: unknown): asserts data is JobData {
       throw new ValidationError(`Invalid quantity for item at index ${index}`);
     }
 
-    if (typeof item.unitPrice !== 'number' || item.unitPrice < 0) {
-      throw new ValidationError(
-        `Invalid unit price for item at index ${index}`,
-      );
+    if (typeof item.price !== 'number' || item.price < 0) {
+      throw new ValidationError(`Invalid price for item at index ${index}`);
     }
 
     if (typeof item.total !== 'number' || item.total < 0) {
@@ -109,7 +110,7 @@ export function validateJobData(data: unknown): asserts data is JobData {
     }
 
     // Verify total calculation
-    const calculatedTotal = item.quantity * item.unitPrice;
+    const calculatedTotal = item.quantity * item.price;
     if (Math.abs(calculatedTotal - item.total) > 0.01) {
       // Allow for small floating-point differences
       throw new ValidationError(`Total mismatch for item at index ${index}`);
@@ -117,16 +118,26 @@ export function validateJobData(data: unknown): asserts data is JobData {
   }
 
   // Validate totals
-  const requiredNumberFields = ['subtotal', 'tax', 'total'] as const;
-  for (const field of requiredNumberFields) {
-    if (typeof invoiceData[field] !== 'number' || invoiceData[field] < 0) {
+  if (!invoiceData.totals || typeof invoiceData.totals !== 'object') {
+    throw new ValidationError('Invalid or missing totals');
+  }
+
+  const totalsFields = ['taxBase', 'vatAmount', 'final'] as const;
+  for (const field of totalsFields) {
+    if (
+      typeof invoiceData.totals[field] !== 'number' ||
+      invoiceData.totals[field] < 0
+    ) {
       throw new ValidationError(`Invalid ${field}`);
     }
   }
 
   // Verify total calculation
-  const calculatedTotal = invoiceData.subtotal + invoiceData.tax;
-  if (Math.abs(calculatedTotal - invoiceData.total) > 0.01) {
+  const calculatedTotal =
+    invoiceData.totals.taxBase +
+    invoiceData.totals.vatAmount +
+    (invoiceData.totals.vatAmountReduced || 0);
+  if (Math.abs(calculatedTotal - invoiceData.totals.final) > 0.01) {
     throw new ValidationError('Invoice total mismatch');
   }
 }

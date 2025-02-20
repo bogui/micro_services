@@ -41,7 +41,7 @@ describe('PDF Service', () => {
         <!DOCTYPE html>
         <html>
         <head>
-          <title>{{title}}</title>
+          <title>{{title}} #{{documentNumber}}</title>
           <style>{{{styles}}}</style>
         </head>
         <body>
@@ -50,40 +50,42 @@ describe('PDF Service', () => {
         </html>
       `,
       ],
-      ['header.hbs', '<div>{{companyDetails.name}}</div>'],
+      ['header.hbs', '<div>{{supplier.name}}</div>'],
       ['footer.hbs', '<div>Footer</div>'],
-      ['company-info.hbs', '<div>{{company.name}}</div>'],
-      ['client-info.hbs', '<div>{{clientDetails.name}}</div>'],
+      ['company-details.hbs', '<div>{{supplier.name}}</div>'],
+      ['items-table.hbs', '<div>{{#each items}}{{description}}{{/each}}</div>'],
+      ['transaction-details.hbs', '<div>{{transaction.description}}</div>'],
+      ['signatures.hbs', '<div>{{recipient.name}}</div>'],
       [
         'invoice/index.hbs',
         `
-        {{#> base/layout title=(concat "Invoice " documentNumber)}}
+        {{#> layout title=(t "invoice.title")}}
           {{#*inline "content"}}
-            <div>Invoice #{{invoiceNumber}}</div>
-            <div>{{companyDetails.name}}</div>
-            <div>{{clientDetails.name}}</div>
+            <div>{{t "invoice.title"}} #{{documentNumber}}</div>
+            <div>{{supplier.name}}</div>
+            <div>{{recipient.name}}</div>
             <div class="totals">
-              <div>Subtotal: \${{format subtotal}}</div>
-              <div>Tax: \${{format tax}}</div>
-              <div>Total: \${{format total}}</div>
+              <div>{{t "invoice.totals.taxBase"}}: {{format totals.taxBase currency}}</div>
+              <div>{{t "invoice.totals.vatAmount"}}: {{format totals.vatAmount currency}}</div>
+              <div>{{t "invoice.totals.final"}}: {{format totals.final currency}}</div>
             </div>
             <div>Thank you for your business!</div>
           {{/inline}}
-        {{/base/layout}}
+        {{/layout}}
       `,
       ],
       [
         'protocol/index.hbs',
         `
-        {{#> base/layout title=(concat "Protocol " documentNumber)}}
+        {{#> layout title=(t "protocol.title")}}
           {{#*inline "content"}}
-            <div>Protocol #{{invoiceNumber}}</div>
-            <div>{{companyDetails.name}}</div>
-            <div>{{clientDetails.name}}</div>
-            <div>Provider Signature</div>
-            <div>Recipient Signature</div>
+            <div>{{t "protocol.title"}} #{{documentNumber}}</div>
+            <div>{{supplier.name}}</div>
+            <div>{{recipient.name}}</div>
+            <div>{{t "protocol.signatures.supplier"}}</div>
+            <div>{{t "protocol.signatures.recipient"}}</div>
           {{/inline}}
-        {{/base/layout}}
+        {{/layout}}
       `,
       ],
     ]);
@@ -147,14 +149,20 @@ describe('PDF Service', () => {
     // Verify HTML content
     const htmlContent = mockPage.setContent.mock.calls[0][0];
     expect(htmlContent).toContain(
-      `<title>Invoice ${mockJobData.data.invoiceNumber}</title>`,
+      `<title>Фактура #${mockJobData.data.documentNumber}</title>`,
     );
-    expect(htmlContent).toContain(mockJobData.data.companyDetails.name);
-    expect(htmlContent).toContain(mockJobData.data.clientDetails.name);
-    expect(htmlContent).toContain(`#${mockJobData.data.invoiceNumber}`);
-    expect(htmlContent).toContain(`$${mockJobData.data.subtotal.toFixed(2)}`);
-    expect(htmlContent).toContain(`$${mockJobData.data.tax.toFixed(2)}`);
-    expect(htmlContent).toContain(`$${mockJobData.data.total.toFixed(2)}`);
+    expect(htmlContent).toContain(mockJobData.data.supplier.name);
+    expect(htmlContent).toContain(mockJobData.data.recipient.name);
+    expect(htmlContent).toContain(`#${mockJobData.data.documentNumber}`);
+    expect(htmlContent).toContain(
+      `${mockJobData.data.totals.taxBase.toFixed(2)} лв.`,
+    );
+    expect(htmlContent).toContain(
+      `${mockJobData.data.totals.vatAmount.toFixed(2)} лв.`,
+    );
+    expect(htmlContent).toContain(
+      `${mockJobData.data.totals.final.toFixed(2)} лв.`,
+    );
     expect(htmlContent).toContain('Thank you for your business!');
 
     // Verify PDF generation options
@@ -188,13 +196,25 @@ describe('PDF Service', () => {
     // Verify HTML content
     const htmlContent = mockPage.setContent.mock.calls[0][0];
     expect(htmlContent).toContain(
-      `<title>Protocol ${mockJobData.data.invoiceNumber}</title>`,
+      `<title>Протокол #${mockJobData.data.documentNumber}</title>`,
     );
-    expect(htmlContent).toContain(mockJobData.data.companyDetails.name);
-    expect(htmlContent).toContain(mockJobData.data.clientDetails.name);
-    expect(htmlContent).toContain(`#${mockJobData.data.invoiceNumber}`);
-    expect(htmlContent).toContain('Provider Signature');
-    expect(htmlContent).toContain('Recipient Signature');
+    expect(htmlContent).toContain(mockJobData.data.supplier.name);
+    expect(htmlContent).toContain(mockJobData.data.recipient.name);
+    expect(htmlContent).toContain(`#${mockJobData.data.documentNumber}`);
+    expect(htmlContent).toContain('Получател');
+    expect(htmlContent).toContain('Доставчик');
+
+    // Verify PDF generation options
+    expect(mockPage.pdf).toHaveBeenCalledWith({
+      path: expect.stringContaining('.pdf'),
+      format: 'A4',
+      margin: {
+        top: '40px',
+        right: '40px',
+        bottom: '40px',
+        left: '40px',
+      },
+    });
 
     // Verify metadata
     expect(result.metadata.originalName).toBe(mockJobData.invoiceId);
@@ -202,6 +222,8 @@ describe('PDF Service', () => {
     expect(result.metadata.storagePath).toMatch(
       /^\d{4}\/\d{2}\/INV-2024-001-[a-f0-9]{8}\.pdf$/,
     );
+    expect(new Date(result.metadata.createdAt)).toBeInstanceOf(Date);
+    expect(new Date(result.metadata.expiresAt)).toBeInstanceOf(Date);
   });
 
   it('should handle PDF generation errors', async () => {

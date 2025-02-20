@@ -1,0 +1,51 @@
+<div class='flex mb-8'>
+  {{#if transaction}}
+    <div class='w-2/3'>
+      <table class='w-full'>
+        <tr>
+          <th class='text-left'>{{t
+              (concat type '.transaction.taxEventDate')
+            }}</th>
+          <td>{{formatDate transaction.taxEventDate 'short'}}</td>
+        </tr>
+        <tr>
+          <th class='text-left'>{{t (concat type '.transaction.basis')}}</th>
+          <td>{{transaction.basis}}</td>
+        </tr>
+        <tr>
+          <th class='text-left'>{{t
+              (concat type '.transaction.description')
+            }}</th>
+          <td>{{transaction.description}}</td>
+        </tr>
+        <tr>
+          <th class='text-left'>{{t (concat type '.transaction.location')}}</th>
+          <td>{{transaction.location}}</td>
+        </tr>
+      </table>
+    </div>
+  {{/if}}
+
+  {{#if payment}}
+    <div>
+      <h3 class='font-bold mb-2'>{{t (concat type '.payment.method')}}:
+        {{payment.method}}</h3>
+      {{#if payment.bankDetails}}
+        <table class='w-full'>
+          <tr>
+            <th class='text-left'>{{t (concat type '.payment.bank.name')}}</th>
+            <td>{{payment.bankDetails.name}}</td>
+          </tr>
+          <tr>
+            <th class='text-left'>{{t (concat type '.payment.bank.iban')}}</th>
+            <td>{{payment.bankDetails.iban}}</td>
+          </tr>
+          <tr>
+            <th class='text-left'>{{t (concat type '.payment.bank.bic')}}</th>
+            <td>{{payment.bankDetails.bic}}</td>
+          </tr>
+        </table>
+      {{/if}}
+    </div>
+  {{/if}}
+</div>

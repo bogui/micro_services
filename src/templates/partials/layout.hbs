@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="{{locale}}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{t title}} - {{documentNumber}}</title>
+    <style>
+        {{{styles}}}
+    </style>
+    {{#if customStyles}}
+    <style>{{{customStyles}}}</style>
+    {{/if}}
+</head>
+<body class="font-sans text-gray-900 p-invoice-margin">
+    {{> @partial-block }}
+</body>
+</html> 

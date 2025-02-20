@@ -1,24 +1,93 @@
 {
   "invoice": {
     "title": "Invoice",
-    "client": "Client",
-    "clientDetails": "Client Details",
-    "description": "Description",
-    "quantity": "Quantity",
-    "unitPrice": "Unit Price",
-    "total": "Total",
+    "original": "Original",
+    "number": "Number",
     "date": "Date",
     "dueDate": "Due Date",
-    "subtotal": "Subtotal",
-    "tax": "Tax"
+    "recipient": {
+      "title": "Recipient",
+      "vat": "VAT №",
+      "id": "ID №",
+      "city": "City",
+      "address": "Address",
+      "representative": "Representative"
+    },
+    "supplier": {
+      "title": "Supplier",
+      "vat": "VAT №",
+      "id": "ID №",
+      "city": "City",
+      "address": "Address",
+      "representative": "Representative"
+    },
+    "table": {
+      "number": "№",
+      "description": "Description of Goods / Services",
+      "unit": "Unit",
+      "quantity": "Quantity",
+      "price": "Price",
+      "total": "Total"
+    },
+    "totals": {
+      "taxBase": "Tax Base",
+      "vatAmount": "VAT (20%)",
+      "vatAmountReduced": "VAT (9%)",
+      "final": "Final Amount"
+    },
+    "payment": {
+      "method": "Payment Method",
+      "bank": "Bank",
+      "iban": "IBAN",
+      "bic": "BIC"
+    },
+    "transaction": {
+      "taxEventDate": "Tax Event Date",
+      "basis": "Transaction Basis",
+      "description": "Transaction Description",
+      "location": "Transaction Location"
+    },
+    "signatures": {
+      "recipient": "Recipient",
+      "supplier": "Supplier"
+    }
   },
   "protocol": {
-    "description": "Description",
-    "quantity": "Quantity",
-    "total": "Total",
-    "totalAmount": "Total Amount",
-    "providerSignature": "Provider Signature",
-    "recipientSignature": "Recipient Signature"
+    "title": "Protocol",
+    "original": "Original",
+    "number": "Number",
+    "date": "Date",
+    "recipient": {
+      "title": "Recipient",
+      "vat": "VAT №",
+      "id": "ID №",
+      "city": "City",
+      "address": "Address",
+      "representative": "Representative"
+    },
+    "supplier": {
+      "title": "Supplier",
+      "vat": "VAT №",
+      "id": "ID №",
+      "city": "City",
+      "address": "Address",
+      "representative": "Representative"
+    },
+    "table": {
+      "number": "№",
+      "description": "Service Description",
+      "unit": "Unit",
+      "quantity": "Quantity",
+      "price": "Price",
+      "total": "Total"
+    },
+    "totals": {
+      "final": "Final Amount"
+    },
+    "signatures": {
+      "recipient": "Recipient",
+      "supplier": "Supplier"
+    }
   },
   "company": {
     "email": "Email",
@@ -26,7 +95,8 @@
   },
   "footer": {
     "allRightsReserved": "All rights reserved.",
-    "thankYou": "Thank you for your order!"
+    "thankYou": "Thank you for your order!",
+    "legalNotice": "According to Art. 6, Par. 1 of the Accounting Act, Art. 114 of the VAT Act and Art. 78 of the RIVATA, the stamp and signature are not mandatory requisites of the invoice"
   },
   "Bill To": "Bill To",
   "INVOICE": "Invoice",

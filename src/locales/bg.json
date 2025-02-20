@@ -1,24 +1,93 @@
 {
   "invoice": {
     "title": "Фактура",
-    "client": "Клиент",
-    "clientDetails": "Детайли на клиента",
-    "description": "Описание",
-    "quantity": "Количество",
-    "unitPrice": "Ед. цена",
-    "total": "Общо",
+    "original": "Оригинал",
+    "number": "Номер",
     "date": "Дата",
     "dueDate": "Краен срок за плащане",
-    "subtotal": "Данъчна основа",
-    "tax": "ДДС"
+    "recipient": {
+      "title": "Получател",
+      "vat": "ДДС №",
+      "id": "Идент №",
+      "city": "Град",
+      "address": "Адрес",
+      "representative": "МОЛ"
+    },
+    "supplier": {
+      "title": "Доставчик",
+      "vat": "ДДС №",
+      "id": "Идент №",
+      "city": "Град",
+      "address": "Адрес",
+      "representative": "МОЛ"
+    },
+    "table": {
+      "number": "№",
+      "description": "Описание на стоката / услугата",
+      "unit": "Мярка",
+      "quantity": "Количество",
+      "price": "Цена",
+      "total": "Стойност"
+    },
+    "totals": {
+      "taxBase": "Данъчна основа",
+      "vatAmount": "ДДС (20%)",
+      "vatAmountReduced": "ДДС (9%)",
+      "final": "Крайна сума"
+    },
+    "payment": {
+      "method": "Плащане",
+      "bank": "Банка",
+      "iban": "IBAN",
+      "bic": "Банков код"
+    },
+    "transaction": {
+      "taxEventDate": "Дата на данъчното събитие",
+      "basis": "Основание на сделката",
+      "description": "Описание на сделката",
+      "location": "Място на сделката"
+    },
+    "signatures": {
+      "recipient": "Получател",
+      "supplier": "Доставчик"
+    }
   },
   "protocol": {
-    "description": "Описание",
-    "quantity": "Количество",
-    "total": "Общо",
-    "totalAmount": "Общо сума",
-    "providerSignature": "Подпис на доставчика",
-    "recipientSignature": "Подпис на получателя"
+    "title": "Протокол",
+    "original": "Оригинал",
+    "number": "Номер",
+    "date": "Дата",
+    "recipient": {
+      "title": "Получател",
+      "vat": "ДДС №",
+      "id": "Идент №",
+      "city": "Град",
+      "address": "Адрес",
+      "representative": "МОЛ"
+    },
+    "supplier": {
+      "title": "Доставчик",
+      "vat": "ДДС №",
+      "id": "Идент №",
+      "city": "Град",
+      "address": "Адрес",
+      "representative": "МОЛ"
+    },
+    "table": {
+      "number": "№",
+      "description": "Описание на услугата",
+      "unit": "Мярка",
+      "quantity": "Количество",
+      "price": "Цена",
+      "total": "Стойност"
+    },
+    "totals": {
+      "final": "Крайна сума"
+    },
+    "signatures": {
+      "recipient": "Получател",
+      "supplier": "Доставчик"
+    }
   },
   "company": {
     "email": "Email",
@@ -26,7 +95,8 @@
   },
   "footer": {
     "allRightsReserved": "Всички права запазени.",
-    "thankYou": "Благодарим ви за поръчката!"
+    "thankYou": "Благодарим ви за поръчката!",
+    "legalNotice": "Съгласно чл. 6, ал. 1 от Закона за счетоводството, ал. 114 от ЗДДС и чл. 78 от ППЗДДС, печатът и подписът не са задължителни реквизити на фактурата"
   },
   "Bill To": "Клиент",
   "INVOICE": "Фактура",

@@ -1,0 +1,62 @@
+<div class='grid grid-cols-2 mb-12 text-sm'>
+  <div class='border border-gray-300 border-e-0 p-4'>
+    <table class='w-full'>
+      <tr>
+        <th class='text-left'>{{t (concat type '.recipient.title')}}</th>
+        <td>{{recipient.name}}</td>
+      </tr>
+      <tr>
+        <th class='text-left'>{{t (concat type '.recipient.vat')}}</th>
+        <td>{{recipient.vatNumber}}</td>
+      </tr>
+      <tr>
+        <th class='text-left'>{{t (concat type '.recipient.id')}}</th>
+        <td>{{recipient.identNumber}}</td>
+      </tr>
+      <tr>
+        <th class='text-left'>{{t (concat type '.recipient.city')}}</th>
+        <td>{{recipient.city}}</td>
+      </tr>
+      <tr>
+        <th class='text-left'>{{t (concat type '.recipient.address')}}</th>
+        <td>{{recipient.address}}</td>
+      </tr>
+      <tr>
+        <th class='text-left'>{{t
+            (concat type '.recipient.representative')
+          }}</th>
+        <td>{{recipient.representative}}</td>
+      </tr>
+    </table>
+  </div>
+  <div class='border border-gray-300 p-4'>
+    <table class='w-full'>
+      <tr>
+        <th class='text-left'>{{t (concat type '.supplier.title')}}</th>
+        <td>{{supplier.name}}</td>
+      </tr>
+      <tr>
+        <th class='text-left'>{{t (concat type '.supplier.vat')}}</th>
+        <td>{{supplier.vatNumber}}</td>
+      </tr>
+      <tr>
+        <th class='text-left'>{{t (concat type '.supplier.id')}}</th>
+        <td>{{supplier.identNumber}}</td>
+      </tr>
+      <tr>
+        <th class='text-left'>{{t (concat type '.supplier.city')}}</th>
+        <td>{{supplier.city}}</td>
+      </tr>
+      <tr>
+        <th class='text-left'>{{t (concat type '.supplier.address')}}</th>
+        <td>{{supplier.address}}</td>
+      </tr>
+      <tr>
+        <th class='text-left'>{{t
+            (concat type '.supplier.representative')
+          }}</th>
+        <td>{{supplier.representative}}</td>
+      </tr>
+    </table>
+  </div>
+</div>
