@@ -2,7 +2,7 @@ import Handlebars from 'handlebars';
 import fs from 'fs/promises';
 import path from 'path';
 import { JobData } from '../types';
-
+import translate from '../helpers/translate.helper';
 type HandlebarsTemplate = Handlebars.TemplateDelegate<any>;
 
 interface TemplateValidationResult {
@@ -10,13 +10,51 @@ interface TemplateValidationResult {
   errors: string[];
 }
 
+const locales = ['bg', 'en'];
+
+const currencies = [
+  {
+    code: 'BGN',
+    symbol: 'лв.',
+    position: 'after',
+  },
+  {
+    code: 'EUR',
+    symbol: '€',
+    position: 'before',
+  },
+  {
+    code: 'USD',
+    symbol: '$',
+    position: 'before',
+  },
+];
+
 export class TemplateService {
   private readonly templates: Map<string, HandlebarsTemplate> = new Map();
   private readonly partials: Map<string, HandlebarsTemplate> = new Map();
   private styles: string = '';
+  private locale: string = 'bg';
+  private currency: string = 'BGN';
 
   constructor() {
     this.registerHelpers();
+  }
+
+  public setLocale(locale: string) {
+    if (!locales.includes(locale)) {
+      throw new Error(`Invalid locale: ${locale}`);
+    }
+
+    this.locale = locale;
+  }
+
+  public setCurrency(currency: string) {
+    if (!currencies.some(c => c.code === currency)) {
+      throw new Error(`Invalid currency: ${currency}`);
+    }
+
+    this.currency = currency;
   }
 
   private registerHelpers() {
@@ -88,13 +126,19 @@ export class TemplateService {
     // Format numbers to 2 decimal places with currency symbol
     Handlebars.registerHelper(
       'format',
-      function (
+      (
         value: number,
-        currencyOrOptions: string | Handlebars.HelperOptions = '$',
-      ) {
-        const currency =
-          typeof currencyOrOptions === 'string' ? currencyOrOptions : '$';
-        return `${currency}${value.toFixed(2)}`;
+        _currencyOrOptions: string | Handlebars.HelperOptions = '$',
+      ) => {
+        const currency = currencies.find(c => c.code === this.currency);
+
+        if (!currency) {
+          throw new Error(`Currency not found: ${this.currency}`);
+        }
+
+        return currency.position === 'before'
+          ? `${currency.symbol}${value.toFixed(2)}`
+          : `${value.toFixed(2)} ${currency.symbol}`;
       },
     );
 
@@ -109,9 +153,9 @@ export class TemplateService {
       const dateObj = new Date(date);
       switch (format) {
         case 'short':
-          return dateObj.toLocaleDateString();
+          return dateObj.toLocaleDateString(this.locale);
         case 'long':
-          return dateObj.toLocaleDateString(undefined, {
+          return dateObj.toLocaleDateString(this.locale, {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
@@ -127,6 +171,11 @@ export class TemplateService {
     // Conditional helper
     Handlebars.registerHelper('when', function (condition: any, value: any) {
       return condition ? value : '';
+    });
+
+    // Translation helper
+    Handlebars.registerHelper('t', (key: string) => {
+      return translate(key, this.locale);
     });
 
     // Math operations
@@ -256,6 +305,8 @@ export class TemplateService {
   async render(jobData: JobData): Promise<string> {
     const templateName = jobData.customTemplate ?? jobData.type ?? 'invoice';
     const template = this.templates.get(templateName);
+    this.locale = jobData.locale ?? 'bg';
+    this.currency = jobData.currency ?? 'BGN';
 
     if (!template) {
       throw new Error(`Template not found: ${templateName}`);

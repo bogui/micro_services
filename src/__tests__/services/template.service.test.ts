@@ -228,12 +228,18 @@ describe('Template Service', () => {
   describe('Template Helpers', () => {
     describe('format helper', () => {
       it('should format numbers with default currency', () => {
+        templateService.setCurrency('USD');
+        templateService.setLocale('en');
+
         const template = Handlebars.compile('{{format number}}');
         const result = template({ number: 42.5 });
         expect(result).toBe('$42.50');
       });
 
       it('should format numbers with custom currency', () => {
+        templateService.setCurrency('EUR');
+        templateService.setLocale('en');
+
         const template = Handlebars.compile('{{format number "€"}}');
         const result = template({ number: 42.5 });
         expect(result).toBe('€42.50');
@@ -244,14 +250,14 @@ describe('Template Service', () => {
       it('should format dates in short format', () => {
         const template = Handlebars.compile('{{formatDate date "short"}}');
         const result = template({ date: '2024-03-18' });
-        expect(result).toBe(new Date('2024-03-18').toLocaleDateString());
+        expect(result).toBe(new Date('2024-03-18').toLocaleDateString('bg'));
       });
 
       it('should format dates in long format', () => {
         const template = Handlebars.compile('{{formatDate date "long"}}');
         const result = template({ date: '2024-03-18' });
         expect(result).toContain('2024');
-        expect(result).toContain('March');
+        expect(result).toContain('март');
         expect(result).toContain('18');
       });
 

@@ -1,0 +1,35 @@
+{
+  "invoice": {
+    "title": "Invoice",
+    "client": "Client",
+    "clientDetails": "Client Details",
+    "description": "Description",
+    "quantity": "Quantity",
+    "unitPrice": "Unit Price",
+    "total": "Total",
+    "date": "Date",
+    "dueDate": "Due Date",
+    "subtotal": "Subtotal",
+    "tax": "Tax"
+  },
+  "protocol": {
+    "description": "Description",
+    "quantity": "Quantity",
+    "total": "Total",
+    "totalAmount": "Total Amount",
+    "providerSignature": "Provider Signature",
+    "recipientSignature": "Recipient Signature"
+  },
+  "company": {
+    "email": "Email",
+    "phone": "Phone"
+  },
+  "footer": {
+    "allRightsReserved": "All rights reserved.",
+    "thankYou": "Thank you for your order!"
+  },
+  "Bill To": "Bill To",
+  "INVOICE": "Invoice",
+  "PROTOCOL": "Protocol",
+  "Recipient": "Recipient"
+}

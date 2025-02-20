@@ -12,10 +12,10 @@
         <table class="w-full mb-8">
             <thead>
                 <tr class="text-left">
-                    <th class="w-[40%] py-3 bg-gray-50 text-primary font-semibold">Description</th>
-                    <th class="w-[20%] py-3 bg-gray-50 text-primary font-semibold text-center">Quantity</th>
-                    <th class="w-[20%] py-3 bg-gray-50 text-primary font-semibold text-right">Unit Price</th>
-                    <th class="w-[20%] py-3 bg-gray-50 text-primary font-semibold text-right">Total</th>
+                    <th class="w-[40%] py-3 bg-gray-50 text-primary font-semibold">{{t 'invoice.description'}}</th>
+                    <th class="w-[20%] py-3 bg-gray-50 text-primary font-semibold text-center">{{t 'invoice.quantity'}}</th>
+                    <th class="w-[20%] py-3 bg-gray-50 text-primary font-semibold text-right">{{t 'invoice.unitPrice'}}</th>
+                    <th class="w-[20%] py-3 bg-gray-50 text-primary font-semibold text-right">{{t 'invoice.total'}}</th>
                 </tr>
             </thead>
             <tbody>
@@ -23,8 +23,8 @@
                 <tr class="border-b border-gray-200">
                     <td class="py-3">{{description}}</td>
                     <td class="py-3 text-center">{{quantity}}</td>
-                    <td class="py-3 text-right">${{format unitPrice}}</td>
-                    <td class="py-3 text-right">${{format total}}</td>
+                    <td class="py-3 text-right">{{format unitPrice }}</td>
+                    <td class="py-3 text-right">{{format total }}</td>
                 </tr>
                 {{/each}}
             </tbody>
@@ -32,21 +32,21 @@
 
         <div class="totals float-right w-[300px]">
             <div class="flex justify-between py-2 border-b border-gray-200">
-                <span>Subtotal</span>
-                <span>${{format subtotal}}</span>
+                <span>{{t 'invoice.subtotal'}}</span>
+                <span>{{format subtotal }}</span>
             </div>
-            <div class="flex justify-between py-2 border-b border-gray-200">
-                <span>Tax</span>
-                <span>${{format tax}}</span>
+            <div class="flex justify-between py-2">
+                <span>{{t 'invoice.tax'}}</span>
+                <span>{{format tax }}</span>
             </div>
-            <div class="flex justify-between py-4 text-lg font-bold text-primary border-t-2 border-primary mt-2">
-                <span>Total</span>
-                <span>${{format total}}</span>
+            <div class="flex justify-between py-4 text-lg font-bold text-primary border-t-2 border-primary">
+                <span>{{t 'invoice.total'}}</span>
+                <span>{{format total }}</span>
             </div>
         </div>
 
         <div class="footer clear-both text-center text-gray-500 text-sm mt-16">
-            <p>Thank you for your business!</p>
+            <p>{{t 'footer.thankYou'}}</p>
         </div>
     {{/inline}}
 {{/base/layout}} 
