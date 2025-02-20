@@ -1,17 +1,35 @@
 # Changelog
 
-## [1.3.0] - 2025-02-20
 ## [1.4.0] - 2025-02-20
 
 ### Added
-- 
+
+- More accurate invoice structure
+- More accurate validation and error handling
 
 ### Changed
-- 
+
+- Updated invoice and protocol templates
+- Updated Bulgarian translations
 
 ### Fixed
-- 
 
+- Fixed issue with signatures
+- Fixed all tests
+
+## [1.3.0] - 2025-02-20
+
+### Added
+
+-
+
+### Changed
+
+-
+
+### Fixed
+
+-
 
 ### Added
 
