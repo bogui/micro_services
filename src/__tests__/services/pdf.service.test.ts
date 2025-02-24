@@ -59,15 +59,15 @@ describe('PDF Service', () => {
       [
         'invoice/index.hbs',
         `
-        {{#> layout title=(t "invoice.title")}}
+        {{#> layout title=(t "document.invoice")}}
           {{#*inline "content"}}
-            <div>{{t "invoice.title"}} #{{documentNumber}}</div>
+            <div>{{t "document.invoice"}} #{{documentNumber}}</div>
             <div>{{supplier.name}}</div>
             <div>{{recipient.name}}</div>
             <div class="totals">
-              <div>{{t "invoice.totals.taxBase"}}: {{format totals.taxBase currency}}</div>
-              <div>{{t "invoice.totals.vatAmount"}}: {{format totals.vatAmount currency}}</div>
-              <div>{{t "invoice.totals.final"}}: {{format totals.final currency}}</div>
+              <div>{{t "document.totals.taxBase"}}: {{format totals.taxBase currency}}</div>
+              <div>{{t "document.totals.vatAmount"}}: {{format totals.vatAmount currency}}</div>
+              <div>{{t "document.totals.final"}}: {{format totals.final currency}}</div>
             </div>
             <div>Thank you for your business!</div>
           {{/inline}}
@@ -77,16 +77,47 @@ describe('PDF Service', () => {
       [
         'protocol/index.hbs',
         `
-        {{#> layout title=(t "protocol.title")}}
+        {{#> layout title=(t "document.protocol")}}
           {{#*inline "content"}}
-            <div>{{t "protocol.title"}} #{{documentNumber}}</div>
+            <div>{{t "document.protocol"}} #{{documentNumber}}</div>
             <div>{{supplier.name}}</div>
             <div>{{recipient.name}}</div>
-            <div>{{t "protocol.signatures.supplier"}}</div>
-            <div>{{t "protocol.signatures.recipient"}}</div>
+            <div>{{t "document.signatures.supplier"}}</div>
+            <div>{{t "document.signatures.recipient"}}</div>
           {{/inline}}
         {{/layout}}
       `,
+      ],
+      [
+        'vat-response.hbs',
+        `
+        <table>
+          <tr>
+            <td class='font-bold'>{{t 'vatResponse.address'}}</td>
+            <td>{{vatResponse.address}}</td>
+          </tr>
+          <tr>
+            <td class='font-bold'>{{t 'vatResponse.countryCode'}}</td>
+            <td>{{vatResponse.countryCode}}</td>
+          </tr>
+          <tr>
+            <td class='font-bold'>{{t 'vatResponse.name'}}</td>
+            <td>{{vatResponse.name}}</td>
+          </tr>
+          <tr>
+            <td class='font-bold'>{{t 'vatResponse.vatNumber'}}</td>
+            <td>{{vatResponse.vatNumber}}</td>
+          </tr>
+          <tr>
+            <td class='font-bold'>{{t 'vatResponse.requestDate'}}</td>
+            <td>{{formatDate vatResponse.requestDate 'short'}}</td>
+          </tr>
+          <tr>
+            <td class='font-bold'>{{t 'vatResponse.requestId'}}</td>
+            <td>{{vatResponse.requestId}}</td>
+          </tr>
+        </table>
+        `,
       ],
     ]);
 
@@ -170,11 +201,16 @@ describe('PDF Service', () => {
       path: expect.stringContaining('.pdf'),
       format: 'A4',
       margin: {
-        top: '40px',
-        right: '40px',
-        bottom: '40px',
-        left: '40px',
+        top: '20px',
+        right: 0,
+        bottom: '0px',
+        left: 0,
       },
+      preferCSSPageSize: true,
+      printBackground: true,
+      displayHeaderFooter: true,
+      footerTemplate: expect.stringContaining('Hyper M'),
+      headerTemplate: expect.stringContaining('pageNumber'),
     });
 
     // Verify metadata
@@ -209,11 +245,16 @@ describe('PDF Service', () => {
       path: expect.stringContaining('.pdf'),
       format: 'A4',
       margin: {
-        top: '40px',
-        right: '40px',
-        bottom: '40px',
-        left: '40px',
+        top: '20px',
+        right: 0,
+        bottom: '0px',
+        left: 0,
       },
+      preferCSSPageSize: true,
+      printBackground: true,
+      displayHeaderFooter: true,
+      footerTemplate: expect.stringContaining('Hyper M'),
+      headerTemplate: expect.stringContaining('pageNumber'),
     });
 
     // Verify metadata

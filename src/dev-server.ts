@@ -1,5 +1,6 @@
 import express from 'express';
 import { templateService } from './services/template.service';
+import { generatePDF } from './services/pdf.service';
 import { JobData } from './types';
 import chokidar from 'chokidar';
 import path from 'path';
@@ -100,78 +101,222 @@ app.use((req, res, next) => {
 
 // Sample data for preview
 const sampleData: JobData = {
-  jobId: '123',
-  invoiceId: 'INV-001',
+  jobId: '1',
+  invoiceId: '1',
   type: 'invoice',
-  locale: 'bg',
-  currency: 'BGN',
+  subType: 'original',
+  isCreditOrDebit: false,
   data: {
-    documentType: 'Invoice',
-    documentNumber: '0000000123',
-    date: new Date().toISOString(),
-    dueDate: new Date().toISOString(),
-    recipient: {
-      name: 'ТОП МАН - ЕООД',
-      vatNumber: 'BG117610653',
-      identNumber: '117610653',
-      city: 'София',
-      address: 'ул. "Васил Левски" 123',
-      representative: 'Иван Иванов',
-      email: 'ivan@topman.bg',
-      phone: '0888 123 456',
-    },
+    documentNumber: '0000000605',
+    date: '2025-02-07T12:04:37.568557+00:00',
+    noVat: false,
+    noVatCause: 'Чл. 53 / ЗДДС - износ на стоки и услуги в европейския съюз',
     supplier: {
-      name: 'Кей енд Ди Консулт ООД',
+      name: 'Кей Енд Ди Консулт - ООД',
+      address: 'Ул. Ген. Скобелев  №48 вх.4 ет.6 ап.17',
+      city: 'Русе',
       vatNumber: 'BG205255868',
       identNumber: '205255868',
-      city: 'Русе',
-      address: 'бул. ген. Скобелев 48',
       representative: 'Богомил Кръстев',
-      email: 'office@knd.bg',
-      phone: '0888 888 888',
+    },
+    relatedDocument: {
+      documentNumber: '0000000604',
+      date: '2025-02-07T12:04:37.568557+00:00',
+    },
+    recipient: {
+      name: 'ТОП МАН - ЕООД',
+      address: 'ул. Потсдам  №10 обл.РУСЕ',
+      city: 'гр.РУСЕ, 7000',
+      vatNumber: 'BG117610653',
+      identNumber: '117610653',
+      representative: 'Мартин Данчев Йорданов',
     },
     items: [
       {
         number: 1,
-        description: 'Абонаментна поддръжка за период 08.03.2024-07.04.2024',
-        unit: 'месец',
-        quantity: 1,
-        price: 99.99,
-        total: 99.99,
+        description: 'Консултантски услуги',
+        unit: 'час',
+        quantity: 10,
+        price: 85.5,
+        total: 855.0,
       },
       {
         number: 2,
-        description: 'Консултантски услуги',
+        description: 'Разработка на софтуер',
+        unit: 'час',
+        quantity: 20,
+        price: 95.0,
+        total: 1900.0,
+      },
+      {
+        number: 3,
+        description: 'Поддръжка на системи',
+        unit: 'мес.',
+        quantity: 1,
+        price: 450.0,
+        total: 450.0,
+      },
+      {
+        number: 4,
+        description: 'Хостинг услуги',
+        unit: 'мес.',
+        quantity: 12,
+        price: 29.99,
+        total: 359.88,
+      },
+      {
+        number: 5,
+        description: 'SSL Сертификат',
+        unit: 'бр.',
+        quantity: 1,
+        price: 149.99,
+        total: 149.99,
+      },
+      {
+        number: 6,
+        description: 'Домейн регистрация',
+        unit: 'год.',
+        quantity: 2,
+        price: 25.0,
+        total: 50.0,
+      },
+      {
+        number: 7,
+        description: 'Обучение на персонал',
+        unit: 'час',
+        quantity: 8,
+        price: 75.0,
+        total: 600.0,
+      },
+      {
+        number: 8,
+        description: 'Анализ на данни',
+        unit: 'бр.',
+        quantity: 1,
+        price: 750.0,
+        total: 750.0,
+      },
+      {
+        number: 9,
+        description: 'SEO оптимизация',
+        unit: 'мес.',
+        quantity: 3,
+        price: 299.99,
+        total: 899.97,
+      },
+      {
+        number: 10,
+        description: 'Backup услуги',
+        unit: 'мес.',
+        quantity: 12,
+        price: 19.99,
+        total: 239.88,
+      },
+      {
+        number: 11,
+        description: 'Email хостинг',
+        unit: 'год.',
+        quantity: 1,
+        price: 120.0,
+        total: 120.0,
+      },
+      {
+        number: 12,
+        description: 'Техническа поддръжка',
         unit: 'час',
         quantity: 5,
-        price: 79.95,
-        total: 399.75,
+        price: 65.0,
+        total: 325.0,
+      },
+      {
+        number: 13,
+        description: 'Сигурностен одит',
+        unit: 'бр.',
+        quantity: 1,
+        price: 899.99,
+        total: 899.99,
+      },
+      {
+        number: 14,
+        description: 'Мониторинг система',
+        unit: 'мес.',
+        quantity: 6,
+        price: 49.99,
+        total: 299.94,
+      },
+      {
+        number: 15,
+        description: 'API интеграция',
+        unit: 'бр.',
+        quantity: 2,
+        price: 450.0,
+        total: 900.0,
+      },
+      {
+        number: 16,
+        description: 'Дизайн услуги',
+        unit: 'час',
+        quantity: 15,
+        price: 65.0,
+        total: 975.0,
+      },
+      {
+        number: 17,
+        description: 'Миграция на данни',
+        unit: 'бр.',
+        quantity: 1,
+        price: 1200.0,
+        total: 1200.0,
+      },
+      {
+        number: 18,
+        description: 'Тестване на софтуер',
+        unit: 'час',
+        quantity: 25,
+        price: 45.0,
+        total: 1125.0,
+      },
+      {
+        number: 19,
+        description: 'Документация',
+        unit: 'стр.',
+        quantity: 50,
+        price: 15.0,
+        total: 750.0,
+      },
+      {
+        number: 20,
+        description: 'Проектен мениджмънт',
+        unit: 'час',
+        quantity: 30,
+        price: 75.0,
+        total: 2250.0,
       },
     ],
     totals: {
-      taxBase: 499.74,
-      vatAmount: 99.95,
+      taxBase: 15099.65,
+      vatAmount: 3019.93,
       vatAmountReduced: 0,
-      final: 599.69,
+      final: 18119.58,
     },
     transaction: {
-      taxEventDate: new Date().toISOString(),
-      basis: 'Договор за абонаментна поддръжка №123/2024',
-      description: 'Абонаментна поддръжка и консултантски услуги',
-      location: 'Русе',
+      taxEventDate: '2025-02-07T12:04:37.561',
+      basis: null,
+      description: null,
+      location: 'гр.РУСЕ, 7000',
     },
     payment: {
-      method: 'По банков път',
+      method: 'bank',
       banks: [
         {
-          name: 'Банка 1',
-          iban: 'BG12345678901234567890',
-          bic: 'UNCRBGSF',
+          name: 'Банка на име',
+          iban: 'IBAN',
+          bic: 'BIC',
         },
         {
-          name: 'Банка 2',
-          iban: 'BG09876543210987654321',
-          bic: 'RZBBBGSF',
+          name: 'Банка на име 2',
+          iban: 'IBAN 2',
+          bic: 'BIC 2',
         },
       ],
     },
@@ -194,8 +339,28 @@ app.use(
 app.get('/', async (req, res) => {
   locale = (req.query.locale as string) || 'bg';
   currency = (req.query.currency as string) || 'BGN';
-  sampleData.type = 'invoice';
-  sampleData.data.totals.final = 240;
+  const type = req.query.type || 'invoice';
+  const subType = req.query.subType || 'original';
+  const vatResponse = req.query.vatResponse || null;
+  const pdf = req.query.pdf || false;
+
+  if (vatResponse) {
+    sampleData.data.vatResponse = {
+      address: 'ул. Потсдам  №10 обл.РУСЕ',
+      countryCode: 'BG',
+      name: 'ТОП МАН - ЕООД',
+      valid: false,
+      vatNumber: 'BG117610653',
+      requestDate: '2025-02-07T12:04:37.568557+00:00',
+    };
+  }
+
+  if (type === 'credit' || type === 'debit') {
+    sampleData.isCreditOrDebit = true;
+  }
+
+  sampleData.type = type as 'invoice' | 'credit' | 'debit' | 'protocol';
+  sampleData.subType = subType as 'original' | 'copy';
   sampleData.locale = locale;
   sampleData.currency = currency;
 
@@ -203,6 +368,12 @@ app.get('/', async (req, res) => {
     console.log('Initializing template service...');
 
     await templateService.initialize();
+
+    if (pdf) {
+      const pdfData = await generatePDF(sampleData);
+      res.send(pdfData);
+      return;
+    }
 
     console.log('Rendering template...');
     const html = await templateService.render(sampleData);
@@ -221,7 +392,6 @@ app.get('/protocol', async (req, res) => {
   locale = (req.query.locale as string) || 'bg';
   currency = (req.query.currency as string) || 'BGN';
   sampleData.type = 'protocol';
-  sampleData.data.totals.final = 200;
   sampleData.locale = locale;
   sampleData.currency = currency;
 

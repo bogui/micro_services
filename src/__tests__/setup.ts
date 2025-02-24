@@ -12,8 +12,6 @@ export const mockInvoiceData: InvoiceData = {
     city: 'Sofia',
     address: 'Test Address 123',
     representative: 'John Doe',
-    email: 'test@client.com',
-    phone: '0888123456',
   },
   supplier: {
     name: 'Test Company Ltd',
@@ -65,11 +63,14 @@ export const mockInvoiceData: InvoiceData = {
       },
     ],
   },
+  noVat: false,
 };
 
 export const mockJobData: JobData = {
   jobId: 'test-job-123',
   invoiceId: 'INV-2024-001',
+  subType: 'original',
+  isCreditOrDebit: false,
   type: 'invoice',
   data: {
     documentType: 'Invoice',
@@ -128,6 +129,7 @@ export const mockJobData: JobData = {
         },
       ],
     },
+    noVat: false,
   },
 };
 

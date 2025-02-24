@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.5.0] - 2025-02-24
+
+### Added
+
+- Watermark when print documents not in production
+- Show the vat response message from VIES check on copy
+- No vat causes if no vat tax is applied (EU)
+- The watermark PNG
+- Test for the watermark
+
+### Changed
+
+- Translations
+- CSS
+- Minor template structure
+
+### Fixed
+
+- All tests
+- Template redundancy
+
 ## [1.4.0] - 2025-02-20
 
 ### Added

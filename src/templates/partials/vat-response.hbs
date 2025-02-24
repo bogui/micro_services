@@ -1,0 +1,70 @@
+<div
+  class='border-2 border-gray-300 rounded-md p-4 max-w-xl mx-auto page text-md'
+>
+  <table class='w-full'>
+    <legend class='my-4'>
+      {{#if vatResponse.valid}}
+        <h3 class='text-green-500 flex items-center gap-2 text-xl'>
+          <svg
+            xmlns='http://www.w3.org/2000/svg'
+            fill='none'
+            viewBox='0 0 24 24'
+            stroke-width='1.5'
+            stroke='currentColor'
+            class='size-6'
+          >
+            <path
+              stroke-linecap='round'
+              stroke-linejoin='round'
+              d='M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'
+            />
+          </svg>
+          {{t 'vatResponse.valid'}}
+        </h3>
+      {{else}}
+        <h3 class='text-red-500 flex items-center gap-2 text-xl'>
+          <svg
+            xmlns='http://www.w3.org/2000/svg'
+            fill='none'
+            viewBox='0 0 24 24'
+            stroke-width='1.5'
+            stroke='currentColor'
+            class='size-6'
+          >
+            <path
+              stroke-linecap='round'
+              stroke-linejoin='round'
+              d='m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'
+            />
+          </svg>
+
+          {{t 'vatResponse.invalid'}}
+        </h3>
+      {{/if}}
+    </legend>
+    <tr>
+      <td class='font-bold'>{{t 'vatResponse.address'}}</td>
+      <td>{{vatResponse.address}}</td>
+    </tr>
+    <tr>
+      <td class='font-bold'>{{t 'vatResponse.countryCode'}}</td>
+      <td>{{vatResponse.countryCode}}</td>
+    </tr>
+    <tr>
+      <td class='font-bold'>{{t 'vatResponse.name'}}</td>
+      <td>{{vatResponse.name}}</td>
+    </tr>
+    <tr>
+      <td class='font-bold'>{{t 'vatResponse.vatNumber'}}</td>
+      <td>{{vatResponse.vatNumber}}</td>
+    </tr>
+    <tr>
+      <td class='font-bold'>{{t 'vatResponse.requestDate'}}</td>
+      <td>{{formatDate vatResponse.requestDate 'short'}}</td>
+    </tr>
+    <tr>
+      <td class='font-bold'>{{t 'vatResponse.requestId'}}</td>
+      <td>{{vatResponse.requestId}}</td>
+    </tr>
+  </table>
+</div>

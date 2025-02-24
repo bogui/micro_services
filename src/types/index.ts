@@ -3,7 +3,9 @@ export interface JobData {
   invoiceId: string;
   locale?: string;
   currency?: string;
-  type?: 'invoice' | 'protocol'; // Optional, defaults to "invoice" if not specified
+  type: 'invoice' | 'credit' | 'debit' | 'protocol'; // Optional, defaults to "invoice" if not specified
+  subType: 'copy' | 'original';
+  isCreditOrDebit: boolean;
   data: InvoiceData;
   customStyles?: string; // Optional custom CSS styles
   customTemplate?: string; // Optional custom template name
@@ -13,22 +15,41 @@ export interface InvoiceData {
   documentType?: string; // Optional since it can be derived from job type
   documentNumber: string;
   date: string;
-  dueDate: string;
+  dueDate?: string | null;
   recipient: CompanyDetails;
   supplier: CompanyDetails;
   items: InvoiceItem[];
   totals: InvoiceTotals;
   transaction: TransactionDetails;
   payment: PaymentDetails;
+  relatedDocument?: RelatedDocument;
+  vatResponse?: VatResponse | null;
+  noVat: boolean;
+  noVatCause?: string | null;
+}
+
+export interface VatResponse {
+  address: string;
+  countryCode: string;
+  name: string;
+  valid: boolean;
+  vatNumber: string;
+  requestDate: string;
+  requestId?: string;
+}
+
+export interface RelatedDocument {
+  documentNumber: string;
+  date: string;
 }
 
 export interface CompanyDetails {
   name: string;
   address: string;
   city: string;
-  email: string;
-  phone: string;
-  vatNumber: string;
+  email?: string;
+  phone?: string;
+  vatNumber?: string;
   identNumber: string;
   representative: string;
 }
@@ -51,8 +72,8 @@ export interface InvoiceTotals {
 
 export interface TransactionDetails {
   taxEventDate: string;
-  basis: string;
-  description: string;
+  basis?: string | null;
+  description?: string | null;
   location: string;
 }
 

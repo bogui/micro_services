@@ -1,11 +1,15 @@
-{{#> layout title=(concat type '.title') documentNumber=documentNumber}}
+{{#> layout title=(concat 'document.' type ) documentNumber=documentNumber}}
     <div class="document invoice">
         {{> header 
-            type='invoice' 
+            type=type 
+            subType=subType
+            isCreditOrDebit=isCreditOrDebit
             documentType=documentType 
             documentNumber=documentNumber
             date=date
             dueDate=dueDate
+            relatedDocument=relatedDocument
+            subType=subType
         }}
         {{> company-details 
             type='invoice' 
@@ -29,4 +33,7 @@
             supplier=supplier
         }}
     </div>
+    {{#if vatResponse}}
+        {{> vat-response vatResponse=vatResponse}}
+    {{/if}}
 {{/layout}} 

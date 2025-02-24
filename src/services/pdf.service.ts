@@ -3,6 +3,9 @@ import { JobData } from '../types';
 import { createPdfStoragePath, validateFilePath } from '../utils/file.utils';
 import { templateService } from './template.service';
 
+const FRONTEND_URL = process.env.FRONTEND_URL ?? 'https://hmo.hyperm.online';
+const APP_NAME = process.env.APP_NAME ?? 'Hyper M';
+
 export async function generatePDF(jobData: JobData): Promise<{
   filePath: string;
   metadata: {
@@ -12,7 +15,10 @@ export async function generatePDF(jobData: JobData): Promise<{
     createdAt: string;
     expiresAt: string;
   };
+  time?: string;
 }> {
+  const start = performance.now();
+
   const browser = await puppeteer.launch({
     headless: true,
     args: [
@@ -46,15 +52,24 @@ export async function generatePDF(jobData: JobData): Promise<{
     await page.pdf({
       path: filePath,
       format: 'A4',
+      printBackground: true,
       margin: {
-        top: '40px',
-        right: '40px',
-        bottom: '40px',
-        left: '40px',
+        top: '20px',
+        right: 0,
+        bottom: '0px',
+        left: 0,
       },
+      preferCSSPageSize: true,
+      displayHeaderFooter: true,
+      headerTemplate:
+        '<div style="color: #000; display: flex; justify-content: flex-end; align-items: center; font-size: 12px; margin-top: 10px; width: 100%; gap: 4px; padding-right: 40px;">Страница <div style="color: #000;" class="pageNumber"></div> от <div style="color: #000;" class="totalPages"></div></div>',
+      footerTemplate: `<div style="color: #000; display: flex; justify-content: flex-start; align-items: center; font-size: 12px; margin-top: 10px; width: 100%; gap: 4px; padding-left: 40px;">Генерирано от <a href="${FRONTEND_URL}">${APP_NAME}</a> ${FRONTEND_URL}</div>`,
     });
 
-    return { filePath, metadata };
+    const end = performance.now();
+    const time = `PDF generation took ${end - start} milliseconds`;
+
+    return { filePath, metadata, time };
   } finally {
     await browser.close();
   }

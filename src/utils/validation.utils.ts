@@ -56,8 +56,9 @@ export function validateJobData(data: unknown): asserts data is JobData {
     throw new ValidationError('Invalid or missing recipient details');
   }
 
-  const recipientFields = ['name', 'address', 'email', 'phone'] as const;
-  for (const field of recipientFields) {
+  // Required fields
+  const requiredFields = ['name', 'address', 'identNumber'] as const;
+  for (const field of requiredFields) {
     if (
       !invoiceData.recipient[field] ||
       typeof invoiceData.recipient[field] !== 'string'
@@ -66,18 +67,57 @@ export function validateJobData(data: unknown): asserts data is JobData {
     }
   }
 
+  // Optional fields with pattern validation
+  if (invoiceData.recipient.email !== undefined) {
+    if (
+      typeof invoiceData.recipient.email !== 'string' ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(invoiceData.recipient.email)
+    ) {
+      throw new ValidationError('Invalid recipient email format');
+    }
+  }
+
+  if (invoiceData.recipient.phone !== undefined) {
+    if (
+      typeof invoiceData.recipient.phone !== 'string' ||
+      !/^\+?[\d\s-()]+$/.test(invoiceData.recipient.phone)
+    ) {
+      throw new ValidationError('Invalid recipient phone format');
+    }
+  }
+
   // Validate supplier details
   if (!invoiceData.supplier || typeof invoiceData.supplier !== 'object') {
     throw new ValidationError('Invalid or missing supplier details');
   }
 
-  const supplierFields = ['name', 'address', 'email', 'phone'] as const;
-  for (const field of supplierFields) {
+  // Required fields
+  const supplierRequiredFields = ['name', 'address', 'identNumber'] as const;
+  for (const field of supplierRequiredFields) {
     if (
       !invoiceData.supplier[field] ||
       typeof invoiceData.supplier[field] !== 'string'
     ) {
       throw new ValidationError(`Invalid or missing supplier ${field}`);
+    }
+  }
+
+  // Optional fields with pattern validation
+  if (invoiceData.supplier.email !== undefined) {
+    if (
+      typeof invoiceData.supplier.email !== 'string' ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(invoiceData.supplier.email)
+    ) {
+      throw new ValidationError('Invalid supplier email format');
+    }
+  }
+
+  if (invoiceData.supplier.phone !== undefined) {
+    if (
+      typeof invoiceData.supplier.phone !== 'string' ||
+      !/^\+?[\d\s-()]+$/.test(invoiceData.supplier.phone)
+    ) {
+      throw new ValidationError('Invalid supplier phone format');
     }
   }
 
