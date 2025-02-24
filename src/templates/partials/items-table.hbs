@@ -2,43 +2,50 @@
 <table class="w-full mb-8 border-collapse text-xs">
   <thead>
     <tr class="border-b border-gray-300">
-      <th class="text-left p-2">{{t (concat type '.table.number')}}</th>
-      <th class="text-left p-2">{{t (concat type '.table.description')}}</th>
-      <th class="text-center p-2">{{t (concat type '.table.unit')}}</th>
-      <th class="text-right p-2">{{t (concat type '.table.quantity')}}</th>
-      <th class="text-right p-2">{{t (concat type '.table.price')}}</th>
-      <th class="text-right p-2">{{t (concat type '.table.total')}}</th>
+      <th class="text-left p-2">{{t 'document.table.number'}}</th>
+      <th class="text-left p-2">{{t 'document.table.description'}}</th>
+      <th class="text-center p-2">{{t 'document.table.unit'}}</th>
+      <th class="text-right p-2">{{t 'document.table.quantity'}}</th>
+      <th class="text-right p-2 min-w-48 ">{{t 'document.table.price'}}</th>
+      <th class="text-right p-2">{{t 'document.table.total'}}</th>
     </tr>
   </thead>
   <tbody>
-    {{#each items}}
+    {{#each items }}
     <tr class="border-b border-gray-300">
       <td class="p-2">{{number}}</td>
       <td class="p-2">{{description}}</td>
       <td class="text-center p-2">{{unit}}</td>
-      <td class="text-right p-2">{{format quantity}}</td>
+      <td class="text-right p-2">{{formatNumber quantity}}</td>
       <td class="text-right p-2">{{format price ../currency}}</td>
       <td class="text-right p-2">{{format total ../currency}}</td>
     </tr>
     {{/each}}
   </tbody>
   <tfoot>
-    <tr class="border-b border-gray-300">
-      <td colspan="5" class="text-right p-2 font-bold">{{t (concat type '.totals.taxBase')}}</td>
+    <tr>
+      <td rowspan="{{#if (ne totals.vatAmountReduced 0)}}4{{else}}3{{/if}}" colspan="4" class="text-left p-2">
+        {{#if noVat}}
+            <p>
+              <span class="font-bold">{{t 'document.noVatReason'}}:</span> {{noVatCause}}
+            </p>
+        {{/if}}
+      </td>
+      <td class="text-right p-2 font-bold">{{t 'document.totals.taxBase'}}</td>
       <td class="text-right p-2">{{format totals.taxBase currency}}</td>
     </tr>
-    <tr class="border-b border-gray-300">
-      <td colspan="5" class="text-right p-2 font-bold">{{t (concat type '.totals.vatAmount')}}</td>
+    <tr>
+      <td class="text-right p-2 font-bold">{{t 'document.totals.vatAmount'}}</td>
       <td class="text-right p-2">{{format totals.vatAmount currency}}</td>
     </tr>
     {{#if (ne totals.vatAmountReduced 0)}}
-    <tr class="border-b border-gray-300">
-      <td colspan="5" class="text-right p-2 font-bold">{{t (concat type '.totals.vatAmountReduced')}}</td>
+    <tr>
+      <td class="text-right p-2 font-bold">{{t 'document.totals.vatAmountReduced'}}</td>
       <td class="text-right p-2">{{format totals.vatAmountReduced currency}}</td>
     </tr>
     {{/if}}
     <tr>
-      <td colspan="5" class="text-right p-2 font-bold">{{t (concat type '.totals.final')}}</td>
+      <td class="text-right p-2 font-bold">{{t 'document.totals.final'}}</td>
       <td class="text-right p-2 font-bold">{{format totals.final currency}}</td>
     </tr>
   </tfoot>
@@ -47,12 +54,12 @@
 <table class="w-full mb-8 border-collapse">
   <thead>
     <tr class="border-b border-gray-300">
-      <th class="text-left p-2">{{t (concat type '.table.number')}}</th>
-      <th class="text-left p-2">{{t (concat type '.table.description')}}</th>
-      <th class="text-center p-2">{{t (concat type '.table.unit')}}</th>
-      <th class="text-right p-2">{{t (concat type '.table.quantity')}}</th>
-      <th class="text-right p-2">{{t (concat type '.table.price')}}</th>
-      <th class="text-right p-2">{{t (concat type '.table.total')}}</th>
+      <th class="text-left p-2">{{t 'document.table.number'}}</th>
+      <th class="text-left p-2">{{t 'document.table.description'}}</th>
+      <th class="text-center p-2">{{t 'document.table.unit'}}</th>
+      <th class="text-right p-2">{{t 'document.table.quantity'}}</th>
+      <th class="text-right p-2">{{t 'document.table.price'}}</th>
+      <th class="text-right p-2">{{t 'document.table.total'}}</th>
     </tr>
   </thead>
   <tbody>
@@ -69,8 +76,8 @@
   </tbody>
   <tfoot>
     <tr>
-      <td colspan="5" class="text-right p-2 font-bold">{{t (concat type '.totals.final')}}</td>
-      <td class="text-right p-2 font-bold">{{format totals.final currency}}</td>
+      <td colspan="5" class="text-right p-2 font-bold">{{t 'document.totals.final'}}</td>
+      <td class="text-right p-2 font-bold">{{format totals.taxBase currency}}</td>
     </tr>
   </tfoot>
 </table>

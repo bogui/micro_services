@@ -65,7 +65,7 @@ describe('Validation Utils', () => {
 
     describe('Company details validation', () => {
       it('should throw for missing supplier fields', () => {
-        const requiredFields = ['name', 'address', 'email', 'phone'];
+        const requiredFields = ['name', 'address', 'identNumber'];
 
         requiredFields.forEach(field => {
           const supplier = { ...mockJobData.data.supplier };
@@ -86,7 +86,7 @@ describe('Validation Utils', () => {
 
     describe('Client details validation', () => {
       it('should throw for missing recipient fields', () => {
-        const requiredFields = ['name', 'address', 'email', 'phone'];
+        const requiredFields = ['name', 'address', 'identNumber'];
 
         requiredFields.forEach(field => {
           const recipient = { ...mockJobData.data.recipient };

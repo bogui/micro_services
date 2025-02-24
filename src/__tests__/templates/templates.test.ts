@@ -116,6 +116,8 @@ describe('Template Generation', () => {
         jobId: 'test-job-123',
         invoiceId: mockInvoiceData.documentNumber,
         type: 'invoice',
+        subType: 'original',
+        isCreditOrDebit: false,
         data: mockInvoiceData,
       };
 
@@ -188,10 +190,10 @@ describe('Template Generation', () => {
         it('should include invoice metadata', async () => {
           const { documentNumber } = mockInvoiceData;
           expect(textContent).toContain(documentNumber);
-          expect(textContent).toContain(translate('invoice.title', 'bg'));
-          expect(textContent).toContain(translate('invoice.number', 'bg'));
-          expect(textContent).toContain(translate('invoice.date', 'bg'));
-          expect(textContent).toContain(translate('invoice.dueDate', 'bg'));
+          expect(textContent).toContain(translate('document.invoice', 'bg'));
+          expect(textContent).toContain(translate('document.number', 'bg'));
+          expect(textContent).toContain(translate('document.date', 'bg'));
+          expect(textContent).toContain(translate('document.dueDate', 'bg'));
         });
       });
 
@@ -207,7 +209,7 @@ describe('Template Generation', () => {
           ];
           headers.forEach(header => {
             expect(textContent).toContain(
-              translate(`invoice.table.${header}`, 'bg'),
+              translate(`document.table.${header}`, 'bg'),
             );
           });
         });
@@ -233,7 +235,7 @@ describe('Template Generation', () => {
           ];
           totalsFields.forEach(field => {
             expect(textContent).toContain(
-              translate(`invoice.totals.${field}`, 'bg'),
+              translate(`document.totals.${field}`, 'bg'),
             );
             expect(html).toContain(
               totals[field as keyof typeof totals].toFixed(2),
@@ -253,6 +255,8 @@ describe('Template Generation', () => {
         jobId: 'test-job-123',
         invoiceId: mockInvoiceData.documentNumber,
         type: 'protocol',
+        subType: 'original',
+        isCreditOrDebit: false,
         data: mockInvoiceData,
       };
 
@@ -333,9 +337,9 @@ describe('Template Generation', () => {
 
       describe('Items table', () => {
         it('should include table headers', async () => {
-          expect(textContent).toContain(translate('protocol.original', 'bg'));
-          expect(textContent).toContain(translate('protocol.number', 'bg'));
-          expect(textContent).toContain(translate('protocol.date', 'bg'));
+          expect(textContent).toContain(translate('document.original', 'bg'));
+          expect(textContent).toContain(translate('document.number', 'bg'));
+          expect(textContent).toContain(translate('document.date', 'bg'));
         });
 
         it('should include all items', async () => {
@@ -350,19 +354,19 @@ describe('Template Generation', () => {
       describe('Total section', () => {
         it('should only include final total', async () => {
           expect(textContent).toContain(
-            translate('protocol.totals.final', 'bg'),
+            translate('document.totals.final', 'bg'),
           );
           expect(textContent).toContain(
-            mockInvoiceData.totals.final.toString(),
+            mockInvoiceData.totals.taxBase.toString(),
           );
           expect(textContent).not.toContain(
-            translate('invoice.totals.taxBase', 'bg'),
+            translate('document.totals.taxBase', 'bg'),
           );
           expect(textContent).not.toContain(
-            translate('invoice.totals.vatAmount', 'bg'),
+            translate('document.totals.vatAmount', 'bg'),
           );
           expect(textContent).not.toContain(
-            translate('invoice.totals.vatAmountReduced', 'bg'),
+            translate('document.totals.vatAmountReduced', 'bg'),
           );
         });
       });
@@ -370,10 +374,10 @@ describe('Template Generation', () => {
       describe('Signature section', () => {
         it('should include signature blocks', async () => {
           expect(textContent).toContain(
-            translate('protocol.signatures.supplier', 'bg'),
+            translate('document.signatures.supplier', 'bg'),
           );
           expect(textContent).toContain(
-            translate('protocol.signatures.recipient', 'bg'),
+            translate('document.signatures.recipient', 'bg'),
           );
         });
       });

@@ -6,12 +6,38 @@
     <title>{{t title}} - {{documentNumber}}</title>
     <style>
         {{{styles}}}
+        {{#if (getBackgroundImage)}}
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 60%;
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: -1;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        .watermark img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        {{/if}}
     </style>
     {{#if customStyles}}
     <style>{{{customStyles}}}</style>
     {{/if}}
 </head>
-<body class="font-sans text-gray-900 p-invoice-margin">
+<body class="font-sans text-gray-900 p-invoice-margin text-xs">
+    {{#if (getBackgroundImage)}}
+    <div class="watermark">
+        <img src="{{{getBackgroundImage}}}" alt="Background" />
+    </div>
+    {{/if}}
     {{> @partial-block }}
 </body>
 </html> 

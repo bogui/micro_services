@@ -1,10 +1,20 @@
 {
-  "invoice": {
-    "title": "Invoice",
+  "document": {
+    "invoice": "Invoice",
+    "credit": "Credit Note",
+    "debit": "Debit Note",
+    "protocol": "Protocol",
     "original": "Original",
+    "copy": "Copy",
     "number": "Number",
     "date": "Date",
     "dueDate": "Due Date",
+    "noVatReason": "Reason for not charging VAT",
+    "relatedDocument": {
+      "title": "Related Document",
+      "number": "Number",
+      "date": "Date"
+    },
     "recipient": {
       "title": "Recipient",
       "vat": "VAT №",
@@ -38,51 +48,16 @@
     "payment": {
       "method": "Payment Method",
       "bank": "Bank",
+      "cash": "Cash",
       "iban": "IBAN",
-      "bic": "BIC"
+      "bic": "BIC",
+      "name": "Bank Name"
     },
     "transaction": {
       "taxEventDate": "Tax Event Date",
       "basis": "Transaction Basis",
       "description": "Transaction Description",
       "location": "Transaction Location"
-    },
-    "signatures": {
-      "recipient": "Recipient",
-      "supplier": "Supplier"
-    }
-  },
-  "protocol": {
-    "title": "Protocol",
-    "original": "Original",
-    "number": "Number",
-    "date": "Date",
-    "recipient": {
-      "title": "Recipient",
-      "vat": "VAT №",
-      "id": "ID №",
-      "city": "City",
-      "address": "Address",
-      "representative": "Representative"
-    },
-    "supplier": {
-      "title": "Supplier",
-      "vat": "VAT №",
-      "id": "ID №",
-      "city": "City",
-      "address": "Address",
-      "representative": "Representative"
-    },
-    "table": {
-      "number": "№",
-      "description": "Service Description",
-      "unit": "Unit",
-      "quantity": "Quantity",
-      "price": "Price",
-      "total": "Total"
-    },
-    "totals": {
-      "final": "Final Amount"
     },
     "signatures": {
       "recipient": "Recipient",
@@ -101,5 +76,15 @@
   "Bill To": "Bill To",
   "INVOICE": "Invoice",
   "PROTOCOL": "Protocol",
-  "Recipient": "Recipient"
+  "Recipient": "Recipient",
+  "vatResponse": {
+    "valid": "Valid VAT number",
+    "invalid": "Invalid VAT number",
+    "address": "Address",
+    "countryCode": "Country Code",
+    "name": "Name",
+    "vatNumber": "VAT №",
+    "requestDate": "Request Date",
+    "requestId": "Request ID"
+  }
 }

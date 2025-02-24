@@ -86,3 +86,21 @@
 
   /* Custom styles */
 }
+
+@media print {
+  .page {
+    page-break-before: always;
+    margin-top: 20px;
+  }
+
+  tfoot {
+    display: table-row-group;
+    page-break-inside: avoid;
+  }
+
+  /* Reset page margins */
+  @page {
+    margin: 60px 20px;
+    size: A4;
+  }
+}

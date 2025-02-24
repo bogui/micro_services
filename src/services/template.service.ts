@@ -1,5 +1,6 @@
 import Handlebars from 'handlebars';
-import fs from 'fs/promises';
+import fs from 'fs';
+import fsPromises from 'fs/promises';
 import path from 'path';
 import { JobData } from '../types';
 import translate from '../helpers/translate.helper';
@@ -175,7 +176,7 @@ export class TemplateService {
           'Value must be a number or a string that can be converted to a number',
         );
       }
-      return numValue.toFixed(2);
+      return numValue.toFixed(3);
     });
 
     // String concatenation
@@ -250,6 +251,53 @@ export class TemplateService {
     Handlebars.registerHelper('ne', function (a: any, b: any) {
       return a !== b;
     });
+
+    Handlebars.registerHelper('and', function (...args: any[]) {
+      return args.every(Boolean);
+    });
+
+    Handlebars.registerHelper('subtract', function (a: number, b: number) {
+      return a - b;
+    });
+
+    Handlebars.registerHelper('getBackgroundImage', () => {
+      console.log('getBackgroundImage called, NODE_ENV:', process.env.NODE_ENV);
+
+      if (process.env.NODE_ENV === 'production') {
+        console.log('Production mode, skipping background image');
+        return '';
+      }
+
+      // Read and convert the image to base64
+      const imagePath = path.join(
+        process.cwd(),
+        'src',
+        'templates',
+        'assets',
+        'images',
+        'demo-doc.png',
+      );
+
+      console.log('Looking for image at:', imagePath);
+
+      try {
+        const exists = fs.existsSync(imagePath);
+        if (!exists) {
+          console.error('Image file not found at path:', imagePath);
+          return '';
+        }
+
+        const imageBuffer = fs.readFileSync(imagePath);
+        const base64Image = imageBuffer.toString('base64');
+        console.log('Image loaded successfully:');
+        console.log('- Base64 length:', base64Image.length);
+        console.log('- Image size:', imageBuffer.length, 'bytes');
+        return `data:image/png;base64,${base64Image}`;
+      } catch (error) {
+        console.error('Error loading background image:', error);
+        return '';
+      }
+    });
   }
 
   async initialize() {
@@ -260,7 +308,7 @@ export class TemplateService {
         'dist/templates/styles/main.css',
       );
       try {
-        await fs.access(stylesPath);
+        await fsPromises.access(stylesPath);
       } catch (error) {
         throw new Error(
           'Compiled CSS file not found. Please run "npm run build:css" first.',
@@ -283,32 +331,32 @@ export class TemplateService {
     const baseDir = path.join(process.cwd(), 'src/templates');
 
     // Load layout partial
-    const layoutTemplate = await fs.readFile(
+    const layoutTemplate = await fsPromises.readFile(
       path.join(baseDir, 'partials/layout.hbs'),
       'utf-8',
     );
     Handlebars.registerPartial('layout', layoutTemplate);
 
     // Load invoice partials
-    const headerTemplate = await fs.readFile(
+    const headerTemplate = await fsPromises.readFile(
       path.join(baseDir, 'partials/header.hbs'),
       'utf-8',
     );
     Handlebars.registerPartial('header', headerTemplate);
 
-    const companyDetailsTemplate = await fs.readFile(
+    const companyDetailsTemplate = await fsPromises.readFile(
       path.join(baseDir, 'partials/company-details.hbs'),
       'utf-8',
     );
     Handlebars.registerPartial('company-details', companyDetailsTemplate);
 
-    const itemsTableTemplate = await fs.readFile(
+    const itemsTableTemplate = await fsPromises.readFile(
       path.join(baseDir, 'partials/items-table.hbs'),
       'utf-8',
     );
     Handlebars.registerPartial('items-table', itemsTableTemplate);
 
-    const transactionDetailsTemplate = await fs.readFile(
+    const transactionDetailsTemplate = await fsPromises.readFile(
       path.join(baseDir, 'partials/transaction-details.hbs'),
       'utf-8',
     );
@@ -317,24 +365,30 @@ export class TemplateService {
       transactionDetailsTemplate,
     );
 
-    const signaturesTemplate = await fs.readFile(
+    const signaturesTemplate = await fsPromises.readFile(
       path.join(baseDir, 'partials/signatures.hbs'),
       'utf-8',
     );
     Handlebars.registerPartial('signatures', signaturesTemplate);
+
+    const vatResponseTemplate = await fsPromises.readFile(
+      path.join(baseDir, 'partials/vat-response.hbs'),
+      'utf-8',
+    );
+    Handlebars.registerPartial('vat-response', vatResponseTemplate);
   }
 
   private async loadTemplates() {
     const baseDir = path.join(process.cwd(), 'src/templates');
 
     // Load document templates
-    const invoiceTemplate = await fs.readFile(
+    const invoiceTemplate = await fsPromises.readFile(
       path.join(baseDir, 'invoice/index.hbs'),
       'utf-8',
     );
     this.templates.set('invoice', Handlebars.compile(invoiceTemplate));
 
-    const protocolTemplate = await fs.readFile(
+    const protocolTemplate = await fsPromises.readFile(
       path.join(baseDir, 'protocol/index.hbs'),
       'utf-8',
     );
@@ -346,7 +400,7 @@ export class TemplateService {
       process.cwd(),
       'dist/templates/styles/main.css',
     );
-    this.styles = await fs.readFile(stylesPath, 'utf-8');
+    this.styles = await fsPromises.readFile(stylesPath, 'utf-8');
   }
 
   async render(jobData: JobData): Promise<string> {
@@ -367,10 +421,12 @@ export class TemplateService {
 
       const context = {
         ...jobData.data,
-        type: templateName,
+        type: jobData.type,
         styles: combinedStyles,
         locale: this.locale,
         currency: this.currency,
+        isCreditOrDebit: jobData.isCreditOrDebit,
+        subType: jobData.subType,
       };
 
       return template(context);

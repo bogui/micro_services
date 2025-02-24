@@ -3,23 +3,19 @@
     <div class='w-2/3'>
       <table class='w-full'>
         <tr>
-          <th class='text-left'>{{t
-              (concat type '.transaction.taxEventDate')
-            }}</th>
+          <th class='text-left'>{{t 'document.transaction.taxEventDate'}}</th>
           <td>{{formatDate transaction.taxEventDate 'short'}}</td>
         </tr>
         <tr>
-          <th class='text-left'>{{t (concat type '.transaction.basis')}}</th>
+          <th class='text-left'>{{t 'document.transaction.basis'}}</th>
           <td>{{transaction.basis}}</td>
         </tr>
         <tr>
-          <th class='text-left'>{{t
-              (concat type '.transaction.description')
-            }}</th>
+          <th class='text-left'>{{t 'document.transaction.description'}}</th>
           <td>{{transaction.description}}</td>
         </tr>
         <tr>
-          <th class='text-left'>{{t (concat type '.transaction.location')}}</th>
+          <th class='text-left'>{{t 'document.transaction.location'}}</th>
           <td>{{transaction.location}}</td>
         </tr>
       </table>
@@ -27,25 +23,37 @@
   {{/if}}
 
   {{#if payment}}
-    <div>
-      <h3 class='font-bold mb-2'>{{t (concat type '.payment.method')}}:
-        {{payment.method}}</h3>
-      {{#if payment.bankDetails}}
-        <table class='w-full'>
-          <tr>
-            <th class='text-left'>{{t (concat type '.payment.bank.name')}}</th>
-            <td>{{payment.bankDetails.name}}</td>
-          </tr>
-          <tr>
-            <th class='text-left'>{{t (concat type '.payment.bank.iban')}}</th>
-            <td>{{payment.bankDetails.iban}}</td>
-          </tr>
-          <tr>
-            <th class='text-left'>{{t (concat type '.payment.bank.bic')}}</th>
-            <td>{{payment.bankDetails.bic}}</td>
-          </tr>
-        </table>
-      {{/if}}
+    <div class='w-1/3'>
+      <table class='w-full'>
+        <tr>
+          <th class='text-left'>{{t 'document.payment.method'}}:</th>
+          <td>{{t (concat 'document.payment.' payment.method)}}</td>
+        </tr>
+        <tr>
+          <td colspan='2'>&nbsp;</td>
+        </tr>
+        {{#if payment.banks.length}}
+        {{#each payment.banks as |bank index|}}
+            <tr>
+              <th class='text-left'>{{t 'document.payment.bank'}}:</th>
+              <td>{{bank.name}}</td>
+            </tr>
+            <tr>
+              <th class='text-left'>{{t 'document.payment.iban'}}:</th>
+              <td>{{bank.iban}}</td>
+            </tr>
+            <tr>
+              <th class='text-left'>{{t 'document.payment.bic'}}:</th>
+              <td>{{bank.bic}}</td>
+            </tr>
+            {{#unless (eq index (subtract ../payment.banks.length 1))}}
+              <tr>
+                <td colspan='2'>&nbsp;</td>
+              </tr>
+            {{/unless}}
+          {{/each}}
+        {{/if}}
+      </table>
     </div>
   {{/if}}
 </div>

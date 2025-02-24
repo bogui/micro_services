@@ -6,14 +6,31 @@ import { JobData } from '../../types';
 
 jest.mock('fs/promises');
 jest.mock('path');
+jest.mock('fs', () => ({
+  existsSync: jest.fn(),
+  readFileSync: jest.fn(),
+}));
 
 describe('Template Service', () => {
   let templateService: TemplateService;
+  let originalEnv: NodeJS.ProcessEnv;
+
+  // Store original NODE_ENV
+  beforeAll(() => {
+    originalEnv = process.env;
+  });
+
+  // Restore original NODE_ENV
+  afterAll(() => {
+    process.env = originalEnv;
+  });
 
   const sampleData: JobData = {
     jobId: 'test-123',
     invoiceId: 'INV-001',
     type: 'invoice' as const,
+    subType: 'original' as const,
+    isCreditOrDebit: false,
     locale: 'bg',
     currency: 'BGN',
     data: {
@@ -21,6 +38,8 @@ describe('Template Service', () => {
       documentNumber: '0000000123',
       date: '2024-03-20',
       dueDate: '2024-04-19',
+      noVat: true,
+      noVatCause: 'Test Cause',
       recipient: {
         name: 'Test Client Ltd',
         vatNumber: 'BG123456789',
@@ -73,14 +92,354 @@ describe('Template Service', () => {
           },
         ],
       },
+      vatResponse: {
+        address: 'Test Address',
+        countryCode: 'BG',
+        name: 'Test Company',
+        valid: true,
+        vatNumber: 'BG123456789',
+        requestDate: '2024-03-20',
+        requestId: '123456789',
+      },
     },
+  };
+
+  // Mock file system operations
+  const mockTemplates: Record<string, string> = {
+    '/dist/templates/styles/main.css': `
+      /* Mock Tailwind CSS utilities */
+      .font-sans { font-family: sans-serif; }
+    `,
+    '/src/templates/partials/layout.hbs': `
+      <!DOCTYPE html>
+      <html lang="{{locale}}">
+      <head>
+          <meta charset="UTF-8">
+          <title>{{t title}} - {{documentNumber}}</title>
+          <style>
+            {{{styles}}}
+            {{#if (getBackgroundImage)}}
+            .watermark {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 60%;
+                height: 60%;
+                opacity: 0.2;
+                pointer-events: none;
+                z-index: -1;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            
+            .watermark img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+            {{/if}}
+          </style>
+          {{#if customStyles}}
+          <style>{{{customStyles}}}</style>
+          {{/if}}
+      </head>
+      <body class="font-sans text-gray-900 p-invoice-margin">
+          {{#if (getBackgroundImage)}}
+          <div class="watermark">
+              <img src="{{{getBackgroundImage}}}" alt="Background" />
+          </div>
+          {{/if}}
+          {{> @partial-block }}
+      </body>
+      </html>
+    `,
+    '/src/templates/partials/header.hbs': `
+      <div class="text-center mb-8">
+        <h1 class="text-2xl mb-2">{{t (concat type '.title')}}</h1>
+        <h3 class="text-lg">{{t (concat type '.original')}}</h3>
+      </div>
+      <div class="flex justify-between mb-6">
+        <div class="self-end">
+          <p>{{t (concat type '.number')}}: <span class="font-bold">{{documentNumber}}</span></p>
+        </div>
+        <table>
+          <tr>
+            <td>{{t (concat type '.date')}}:</td>
+            <td>{{formatDate date}}</td>
+          </tr>
+          {{#if (eq type 'invoice')}}
+            <tr>
+              <td>{{t (concat type '.dueDate')}}:</td>
+              <td>{{formatDate dueDate}}</td>
+            </tr>
+          {{/if}}
+        </table>
+      </div>
+    `,
+    '/src/templates/partials/company-details.hbs': `
+      <div class="grid grid-cols-2 gap-4 mb-12">
+        <div class="border border-gray-300 p-4">
+          <table class="w-full">
+            <tr>
+              <th>{{t 'invoice.recipient.title'}}</th>
+              <td>{{recipient.name}}</td>
+            </tr>
+            <tr>
+              <th>{{t 'invoice.recipient.vat'}}</th>
+              <td>{{recipient.vatNumber}}</td>
+            </tr>
+            <tr>
+              <th>{{t 'invoice.recipient.id'}}</th>
+              <td>{{recipient.identNumber}}</td>
+            </tr>
+            <tr>
+              <th>{{t 'invoice.recipient.city'}}</th>
+              <td>{{recipient.city}}</td>
+            </tr>
+            <tr>
+              <th>{{t 'invoice.recipient.address'}}</th>
+              <td>{{recipient.address}}</td>
+            </tr>
+            <tr>
+              <th>{{t 'invoice.recipient.representative'}}</th>
+              <td>{{recipient.representative}}</td>
+            </tr>
+          </table>
+        </div>
+        <div class="border border-gray-300 p-4">
+          <table class="w-full">
+            <tr>
+              <th>{{t 'invoice.supplier.title'}}</th>
+              <td>{{supplier.name}}</td>
+            </tr>
+            <tr>
+              <th>{{t 'invoice.supplier.vat'}}</th>
+              <td>{{supplier.vatNumber}}</td>
+            </tr>
+            <tr>
+              <th>{{t 'invoice.supplier.id'}}</th>
+              <td>{{supplier.identNumber}}</td>
+            </tr>
+            <tr>
+              <th>{{t 'invoice.supplier.city'}}</th>
+              <td>{{supplier.city}}</td>
+            </tr>
+            <tr>
+              <th>{{t 'invoice.supplier.address'}}</th>
+              <td>{{supplier.address}}</td>
+            </tr>
+            <tr>
+              <th>{{t 'invoice.supplier.representative'}}</th>
+              <td>{{supplier.representative}}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    `,
+    '/src/templates/partials/items-table.hbs': `
+      <div class="mb-8">
+        <table class="w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="border p-2 text-left">{{t (concat type '.itemNumber')}}</th>
+              <th class="border p-2 text-left">{{t (concat type '.description')}}</th>
+              <th class="border p-2 text-left">{{t (concat type '.unit')}}</th>
+              <th class="border p-2 text-right">{{t (concat type '.quantity')}}</th>
+              <th class="border p-2 text-right">{{t (concat type '.price')}}</th>
+              <th class="border p-2 text-right">{{t (concat type '.total')}}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#each items}}
+              <tr>
+                <td class="border p-2">{{number}}</td>
+                <td class="border p-2">{{description}}</td>
+                <td class="border p-2">{{unit}}</td>
+                <td class="border p-2 text-right">{{format quantity}}</td>
+                <td class="border p-2 text-right">{{format price ../currency}}</td>
+                <td class="border p-2 text-right">{{format total ../currency}}</td>
+              </tr>
+            {{/each}}
+          </tbody>
+          {{#if (eq type 'invoice')}}
+            <tfoot>
+              <tr>
+                <td colspan="5" class="border p-2 text-right font-bold">{{t 'invoice.totals.taxBase'}}:</td>
+                <td class="border p-2 text-right">{{format totals.taxBase currency}}</td>
+              </tr>
+              <tr>
+                <td colspan="5" class="border p-2 text-right font-bold">{{t 'invoice.totals.vatAmount'}}:</td>
+                <td class="border p-2 text-right">{{format totals.vatAmount currency}}</td>
+              </tr>
+              <tr>
+                <td colspan="5" class="border p-2 text-right font-bold">{{t 'invoice.totals.vatAmountReduced'}}:</td>
+                <td class="border p-2 text-right">{{format totals.vatAmountReduced currency}}</td>
+              </tr>
+              <tr>
+                <td colspan="5" class="border p-2 text-right font-bold">{{t 'invoice.totals.final'}}:</td>
+                <td class="border p-2 text-right font-bold">{{format totals.final currency}}</td>
+              </tr>
+            </tfoot>
+          {{else}}
+            <tfoot>
+              <tr>
+                <td colspan="5" class="border p-2 text-right font-bold">{{t 'protocol.totals.final'}}:</td>
+                <td class="border p-2 text-right font-bold">{{format totals.final currency}}</td>
+              </tr>
+            </tfoot>
+          {{/if}}
+        </table>
+      </div>
+    `,
+    '/src/templates/invoice/index.hbs': `
+      {{#> layout title=(concat type '.title') documentNumber=documentNumber}}
+        <div class="document invoice">
+          {{> header 
+              type='invoice' 
+              documentType=documentType 
+              documentNumber=documentNumber
+              date=date
+              dueDate=dueDate
+          }}
+          {{> company-details 
+              type='invoice' 
+              recipient=recipient 
+              supplier=supplier
+          }}
+          {{> items-table 
+              type='invoice'
+              items=items
+              totals=totals
+              currency=currency
+          }}
+          {{> transaction-details 
+              type='invoice'
+              transaction=transaction
+              payment=payment
+          }}
+          {{> signatures 
+              type='invoice' 
+              recipient=recipient 
+              supplier=supplier
+          }}
+        </div>
+      {{/layout}}
+    `,
+    '/src/templates/protocol/index.hbs': `
+      {{#> layout title=(concat type '.title') documentNumber=documentNumber}}
+        <div class="document protocol">
+          {{> header 
+              type='protocol' 
+              documentNumber=documentNumber
+              date=date
+          }}
+          {{> company-details 
+              type='protocol' 
+              recipient=recipient 
+              supplier=supplier
+          }}
+          {{> items-table 
+              type='protocol'
+              items=items
+              totals=totals
+              currency=currency
+          }}
+          {{> signatures 
+              type='protocol' 
+              recipient=recipient 
+              supplier=supplier
+          }}
+        </div>
+      {{/layout}}
+    `,
+    '/src/templates/partials/transaction-details.hbs': `
+      <div class="mb-8">
+        <table class="w-full">
+          <tr>
+            <th class="text-left">{{t 'invoice.taxEventDate'}}:</th>
+            <td>{{formatDate transaction.taxEventDate}}</td>
+          </tr>
+          <tr>
+            <th class="text-left">{{t 'invoice.basis'}}:</th>
+            <td>{{transaction.basis}}</td>
+          </tr>
+          <tr>
+            <th class="text-left">{{t 'invoice.description'}}:</th>
+            <td>{{transaction.description}}</td>
+          </tr>
+          <tr>
+            <th class="text-left">{{t 'invoice.location'}}:</th>
+            <td>{{transaction.location}}</td>
+          </tr>
+          <tr>
+            <th class="text-left">{{t 'invoice.payment'}}:</th>
+            <td>{{payment.method}}</td>
+          </tr>
+        </table>
+      </div>
+    `,
+    '/src/templates/partials/signatures.hbs': `
+      <div class="mt-12 grid grid-cols-2 gap-4">
+        <div>
+          <p class="font-bold mb-2">{{t (concat type '.recipient')}}:</p>
+          <div class="h-16 border-b border-gray-300"></div>
+        </div>
+        <div>
+          <p class="font-bold mb-2">{{t (concat type '.supplier')}}:</p>
+          <div class="h-16 border-b border-gray-300"></div>
+        </div>
+      </div>
+      <div class="mt-8 text-sm text-gray-600">
+        <p>{{t 'invoice.disclaimer'}}</p>
+      </div>
+    `,
+    '/src/templates/partials/vat-response.hbs': `
+      <table>
+        <tr>
+          <td class='font-bold'>{{t 'vatResponse.address'}}</td>
+          <td>{{vatResponse.address}}</td>
+        </tr>
+        <tr>
+          <td class='font-bold'>{{t 'vatResponse.countryCode'}}</td>
+          <td>{{vatResponse.countryCode}}</td>
+        </tr>
+        <tr>
+          <td class='font-bold'>{{t 'vatResponse.name'}}</td>
+          <td>{{vatResponse.name}}</td>
+        </tr>
+        <tr>
+          <td class='font-bold'>{{t 'vatResponse.vatNumber'}}</td>
+          <td>{{vatResponse.vatNumber}}</td>
+        </tr>
+        <tr>
+          <td class='font-bold'>{{t 'vatResponse.requestDate'}}</td>
+          <td>{{formatDate vatResponse.requestDate 'short'}}</td>
+        </tr>
+        <tr>
+          <td class='font-bold'>{{t 'vatResponse.requestId'}}</td>
+          <td>{{vatResponse.requestId}}</td>
+        </tr>
+      </table>
+    `,
   };
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    process.env = { ...originalEnv }; // Reset env for each test
 
     // Mock fs.access to simulate CSS file exists
     (fs.access as jest.Mock).mockResolvedValue(undefined);
+
+    // Mock fs.existsSync for background image check
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    (require('fs').existsSync as jest.Mock).mockReturnValue(true);
+
+    // Mock fs.readFileSync for background image
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    (require('fs').readFileSync as jest.Mock).mockReturnValue(
+      Buffer.from('fake-image-data'),
+    );
 
     // Mock path.join to handle paths correctly
     (path.join as jest.Mock).mockImplementation((...paths: string[]) => {
@@ -88,272 +447,6 @@ describe('Template Service', () => {
       const filteredPaths = paths.map(p => p.replace(process.cwd(), ''));
       return filteredPaths.join('/').replace(/\\/g, '/');
     });
-
-    templateService = new TemplateService();
-
-    // Mock file system operations
-    const mockTemplates: Record<string, string> = {
-      '/dist/templates/styles/main.css': `
-        /* Mock Tailwind CSS utilities */
-        .font-sans { font-family: sans-serif; }
-      `,
-      '/src/templates/partials/layout.hbs': `
-        <!DOCTYPE html>
-        <html lang="{{locale}}">
-        <head>
-            <meta charset="UTF-8">
-            <title>{{t title}} - {{documentNumber}}</title>
-            <style>{{{styles}}}</style>
-            {{#if customStyles}}
-            <style>{{{customStyles}}}</style>
-            {{/if}}
-        </head>
-        <body class="font-sans text-gray-900 p-invoice-margin">
-            {{> @partial-block }}
-        </body>
-        </html>
-      `,
-      '/src/templates/partials/header.hbs': `
-        <div class="text-center mb-8">
-          <h1 class="text-2xl mb-2">{{t (concat type '.title')}}</h1>
-          <h3 class="text-lg">{{t (concat type '.original')}}</h3>
-        </div>
-        <div class="flex justify-between mb-6">
-          <div class="self-end">
-            <p>{{t (concat type '.number')}}: <span class="font-bold">{{documentNumber}}</span></p>
-          </div>
-          <table>
-            <tr>
-              <td>{{t (concat type '.date')}}:</td>
-              <td>{{formatDate date}}</td>
-            </tr>
-            {{#if (eq type 'invoice')}}
-              <tr>
-                <td>{{t (concat type '.dueDate')}}:</td>
-                <td>{{formatDate dueDate}}</td>
-              </tr>
-            {{/if}}
-          </table>
-        </div>
-      `,
-      '/src/templates/partials/company-details.hbs': `
-        <div class="grid grid-cols-2 gap-4 mb-12">
-          <div class="border border-gray-300 p-4">
-            <table class="w-full">
-              <tr>
-                <th>{{t 'invoice.recipient.title'}}</th>
-                <td>{{recipient.name}}</td>
-              </tr>
-              <tr>
-                <th>{{t 'invoice.recipient.vat'}}</th>
-                <td>{{recipient.vatNumber}}</td>
-              </tr>
-              <tr>
-                <th>{{t 'invoice.recipient.id'}}</th>
-                <td>{{recipient.identNumber}}</td>
-              </tr>
-              <tr>
-                <th>{{t 'invoice.recipient.city'}}</th>
-                <td>{{recipient.city}}</td>
-              </tr>
-              <tr>
-                <th>{{t 'invoice.recipient.address'}}</th>
-                <td>{{recipient.address}}</td>
-              </tr>
-              <tr>
-                <th>{{t 'invoice.recipient.representative'}}</th>
-                <td>{{recipient.representative}}</td>
-              </tr>
-            </table>
-          </div>
-          <div class="border border-gray-300 p-4">
-            <table class="w-full">
-              <tr>
-                <th>{{t 'invoice.supplier.title'}}</th>
-                <td>{{supplier.name}}</td>
-              </tr>
-              <tr>
-                <th>{{t 'invoice.supplier.vat'}}</th>
-                <td>{{supplier.vatNumber}}</td>
-              </tr>
-              <tr>
-                <th>{{t 'invoice.supplier.id'}}</th>
-                <td>{{supplier.identNumber}}</td>
-              </tr>
-              <tr>
-                <th>{{t 'invoice.supplier.city'}}</th>
-                <td>{{supplier.city}}</td>
-              </tr>
-              <tr>
-                <th>{{t 'invoice.supplier.address'}}</th>
-                <td>{{supplier.address}}</td>
-              </tr>
-              <tr>
-                <th>{{t 'invoice.supplier.representative'}}</th>
-                <td>{{supplier.representative}}</td>
-              </tr>
-            </table>
-          </div>
-        </div>
-      `,
-      '/src/templates/partials/items-table.hbs': `
-        <div class="mb-8">
-          <table class="w-full border-collapse">
-            <thead>
-              <tr class="bg-gray-100">
-                <th class="border p-2 text-left">{{t (concat type '.itemNumber')}}</th>
-                <th class="border p-2 text-left">{{t (concat type '.description')}}</th>
-                <th class="border p-2 text-left">{{t (concat type '.unit')}}</th>
-                <th class="border p-2 text-right">{{t (concat type '.quantity')}}</th>
-                <th class="border p-2 text-right">{{t (concat type '.price')}}</th>
-                <th class="border p-2 text-right">{{t (concat type '.total')}}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {{#each items}}
-                <tr>
-                  <td class="border p-2">{{number}}</td>
-                  <td class="border p-2">{{description}}</td>
-                  <td class="border p-2">{{unit}}</td>
-                  <td class="border p-2 text-right">{{format quantity}}</td>
-                  <td class="border p-2 text-right">{{format price ../currency}}</td>
-                  <td class="border p-2 text-right">{{format total ../currency}}</td>
-                </tr>
-              {{/each}}
-            </tbody>
-            {{#if (eq type 'invoice')}}
-              <tfoot>
-                <tr>
-                  <td colspan="5" class="border p-2 text-right font-bold">{{t 'invoice.totals.taxBase'}}:</td>
-                  <td class="border p-2 text-right">{{format totals.taxBase currency}}</td>
-                </tr>
-                <tr>
-                  <td colspan="5" class="border p-2 text-right font-bold">{{t 'invoice.totals.vatAmount'}}:</td>
-                  <td class="border p-2 text-right">{{format totals.vatAmount currency}}</td>
-                </tr>
-                <tr>
-                  <td colspan="5" class="border p-2 text-right font-bold">{{t 'invoice.totals.vatAmountReduced'}}:</td>
-                  <td class="border p-2 text-right">{{format totals.vatAmountReduced currency}}</td>
-                </tr>
-                <tr>
-                  <td colspan="5" class="border p-2 text-right font-bold">{{t 'invoice.totals.final'}}:</td>
-                  <td class="border p-2 text-right font-bold">{{format totals.final currency}}</td>
-                </tr>
-              </tfoot>
-            {{else}}
-              <tfoot>
-                <tr>
-                  <td colspan="5" class="border p-2 text-right font-bold">{{t 'protocol.totals.final'}}:</td>
-                  <td class="border p-2 text-right font-bold">{{format totals.final currency}}</td>
-                </tr>
-              </tfoot>
-            {{/if}}
-          </table>
-        </div>
-      `,
-      '/src/templates/invoice/index.hbs': `
-        {{#> layout title=(concat type '.title') documentNumber=documentNumber}}
-          <div class="document invoice">
-            {{> header 
-                type='invoice' 
-                documentType=documentType 
-                documentNumber=documentNumber
-                date=date
-                dueDate=dueDate
-            }}
-            {{> company-details 
-                type='invoice' 
-                recipient=recipient 
-                supplier=supplier
-            }}
-            {{> items-table 
-                type='invoice'
-                items=items
-                totals=totals
-                currency=currency
-            }}
-            {{> transaction-details 
-                type='invoice'
-                transaction=transaction
-                payment=payment
-            }}
-            {{> signatures 
-                type='invoice' 
-                recipient=recipient 
-                supplier=supplier
-            }}
-          </div>
-        {{/layout}}
-      `,
-      '/src/templates/protocol/index.hbs': `
-        {{#> layout title=(concat type '.title') documentNumber=documentNumber}}
-          <div class="document protocol">
-            {{> header 
-                type='protocol' 
-                documentNumber=documentNumber
-                date=date
-            }}
-            {{> company-details 
-                type='protocol' 
-                recipient=recipient 
-                supplier=supplier
-            }}
-            {{> items-table 
-                type='protocol'
-                items=items
-                totals=totals
-                currency=currency
-            }}
-            {{> signatures 
-                type='protocol' 
-                recipient=recipient 
-                supplier=supplier
-            }}
-          </div>
-        {{/layout}}
-      `,
-      '/src/templates/partials/transaction-details.hbs': `
-        <div class="mb-8">
-          <table class="w-full">
-            <tr>
-              <th class="text-left">{{t 'invoice.taxEventDate'}}:</th>
-              <td>{{formatDate data.transaction.taxEventDate}}</td>
-            </tr>
-            <tr>
-              <th class="text-left">{{t 'invoice.basis'}}:</th>
-              <td>{{data.transaction.basis}}</td>
-            </tr>
-            <tr>
-              <th class="text-left">{{t 'invoice.description'}}:</th>
-              <td>{{data.transaction.description}}</td>
-            </tr>
-            <tr>
-              <th class="text-left">{{t 'invoice.location'}}:</th>
-              <td>{{data.transaction.location}}</td>
-            </tr>
-            <tr>
-              <th class="text-left">{{t 'invoice.payment'}}:</th>
-              <td>{{data.payment.method}}</td>
-            </tr>
-          </table>
-        </div>
-      `,
-      '/src/templates/partials/signatures.hbs': `
-        <div class="mt-12 grid grid-cols-2 gap-4">
-          <div>
-            <p class="font-bold mb-2">{{t (concat type '.recipient')}}:</p>
-            <div class="h-16 border-b border-gray-300"></div>
-          </div>
-          <div>
-            <p class="font-bold mb-2">{{t (concat type '.supplier')}}:</p>
-            <div class="h-16 border-b border-gray-300"></div>
-          </div>
-        </div>
-        <div class="mt-8 text-sm text-gray-600">
-          <p>{{t 'invoice.disclaimer'}}</p>
-        </div>
-      `,
-    };
 
     // Mock path.resolve to handle absolute paths
     (path.resolve as jest.Mock).mockImplementation((...paths: string[]) => {
@@ -374,6 +467,7 @@ describe('Template Service', () => {
     });
 
     // Initialize the service
+    templateService = new TemplateService();
     await templateService.initialize();
   });
 
@@ -455,14 +549,14 @@ describe('Template Service', () => {
     describe('translation helper', () => {
       it('should translate keys correctly', () => {
         templateService.setLocale('bg');
-        const template = Handlebars.compile('{{t "invoice.title"}}');
+        const template = Handlebars.compile('{{t "document.invoice"}}');
         const result = template({});
         expect(result).toBe('Фактура');
       });
 
       it('should fallback to bg locale if translation not found', () => {
         templateService.setLocale('invalid');
-        const template = Handlebars.compile('{{t "invoice.title"}}');
+        const template = Handlebars.compile('{{t "document.invoice"}}');
         const result = template({});
         expect(result).toBe('Фактура');
       });
@@ -562,6 +656,64 @@ describe('Template Service', () => {
       });
       expect(html).toContain('<!DOCTYPE html>');
       expect(html).toContain('Custom Template');
+    });
+  });
+
+  describe('Background Watermark', () => {
+    it('should include watermark in development mode', async () => {
+      process.env.NODE_ENV = 'development';
+
+      const html = await templateService.render(sampleData);
+
+      expect(html).toContain('watermark');
+      expect(html).toContain('data:image/png;base64,');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      expect(require('fs').existsSync).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      expect(require('fs').readFileSync).toHaveBeenCalled();
+    });
+
+    it('should not include watermark in production mode', async () => {
+      process.env.NODE_ENV = 'production';
+
+      const html = await templateService.render(sampleData);
+
+      expect(html).not.toContain('watermark');
+      expect(html).not.toContain('data:image/png;base64,');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      expect(require('fs').existsSync).not.toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      expect(require('fs').readFileSync).not.toHaveBeenCalled();
+    });
+
+    it('should handle missing background image gracefully', async () => {
+      process.env.NODE_ENV = 'development';
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      (require('fs').existsSync as jest.Mock).mockReturnValue(false);
+
+      const html = await templateService.render(sampleData);
+
+      expect(html).not.toContain('data:image/png;base64,');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      expect(require('fs').existsSync).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      expect(require('fs').readFileSync).not.toHaveBeenCalled();
+    });
+
+    it('should handle file read errors gracefully', async () => {
+      process.env.NODE_ENV = 'development';
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      (require('fs').readFileSync as jest.Mock).mockImplementation(() => {
+        throw new Error('File read error');
+      });
+
+      const html = await templateService.render(sampleData);
+
+      expect(html).not.toContain('data:image/png;base64,');
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      expect(require('fs').existsSync).toHaveBeenCalled();
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      expect(require('fs').readFileSync).toHaveBeenCalled();
     });
   });
 });

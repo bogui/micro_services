@@ -1,10 +1,20 @@
 {
-  "invoice": {
-    "title": "Фактура",
+  "document": {
+    "invoice": "Фактура",
+    "credit": "Кредитно известие",
+    "debit": "Дебитно известие",
+    "protocol": "Протокол",
     "original": "Оригинал",
+    "copy": "Копие",
     "number": "Номер",
     "date": "Дата",
-    "dueDate": "Краен срок за плащане",
+    "dueDate": "Дата на падеж",
+    "noVatReason": "Причина за неначисляване на ДДС",
+    "relatedDocument": {
+      "title": "Свързан документ",
+      "number": "Номер",
+      "date": "От дата"
+    },
     "recipient": {
       "title": "Получател",
       "vat": "ДДС №",
@@ -38,51 +48,16 @@
     "payment": {
       "method": "Плащане",
       "bank": "Банка",
+      "cash": "В брой",
       "iban": "IBAN",
-      "bic": "Банков код"
+      "bic": "Банков код",
+      "name": "Име на банката"
     },
     "transaction": {
       "taxEventDate": "Дата на данъчното събитие",
       "basis": "Основание на сделката",
       "description": "Описание на сделката",
       "location": "Място на сделката"
-    },
-    "signatures": {
-      "recipient": "Получател",
-      "supplier": "Доставчик"
-    }
-  },
-  "protocol": {
-    "title": "Протокол",
-    "original": "Оригинал",
-    "number": "Номер",
-    "date": "Дата",
-    "recipient": {
-      "title": "Получател",
-      "vat": "ДДС №",
-      "id": "Идент №",
-      "city": "Град",
-      "address": "Адрес",
-      "representative": "МОЛ"
-    },
-    "supplier": {
-      "title": "Доставчик",
-      "vat": "ДДС №",
-      "id": "Идент №",
-      "city": "Град",
-      "address": "Адрес",
-      "representative": "МОЛ"
-    },
-    "table": {
-      "number": "№",
-      "description": "Описание на услугата",
-      "unit": "Мярка",
-      "quantity": "Количество",
-      "price": "Цена",
-      "total": "Стойност"
-    },
-    "totals": {
-      "final": "Крайна сума"
     },
     "signatures": {
       "recipient": "Получател",
@@ -101,5 +76,15 @@
   "Bill To": "Клиент",
   "INVOICE": "Фактура",
   "PROTOCOL": "Протокол",
-  "Recipient": "Получател"
+  "Recipient": "Получател",
+  "vatResponse": {
+    "valid": "Валиден ДДС номер",
+    "invalid": "Невалиден ДДС номер",
+    "address": "Адрес",
+    "countryCode": "Код на държавата",
+    "name": "Име",
+    "vatNumber": "ДДС №",
+    "requestDate": "Дата на заявката",
+    "requestId": "Идентификатор на заявката"
+  }
 }

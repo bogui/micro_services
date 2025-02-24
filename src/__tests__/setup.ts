@@ -70,6 +70,8 @@ export const mockInvoiceData: InvoiceData = {
 export const mockJobData: JobData = {
   jobId: 'test-job-123',
   invoiceId: 'INV-2024-001',
+  subType: 'original',
+  isCreditOrDebit: false,
   type: 'invoice',
   data: {
     documentType: 'Invoice',
