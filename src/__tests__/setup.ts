@@ -12,8 +12,6 @@ export const mockInvoiceData: InvoiceData = {
     city: 'Sofia',
     address: 'Test Address 123',
     representative: 'John Doe',
-    email: 'test@client.com',
-    phone: '0888123456',
   },
   supplier: {
     name: 'Test Company Ltd',
@@ -65,6 +63,7 @@ export const mockInvoiceData: InvoiceData = {
       },
     ],
   },
+  noVat: false,
 };
 
 export const mockJobData: JobData = {
@@ -130,6 +129,7 @@ export const mockJobData: JobData = {
         },
       ],
     },
+    noVat: false,
   },
 };
 
