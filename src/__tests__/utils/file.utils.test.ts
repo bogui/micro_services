@@ -67,7 +67,7 @@ describe('File Utils', () => {
 
     it('should create valid storage path and metadata', async () => {
       const invoiceId = 'INV-2024-001';
-      const result = await createPdfStoragePath(invoiceId);
+      const result = await createPdfStoragePath(invoiceId, 'original');
       const now = new Date();
       const currentYear = now.getFullYear().toString();
       const currentMonth = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -80,13 +80,13 @@ describe('File Utils', () => {
 
       // Verify file name format
       expect(result.metadata.fileName).toMatch(
-        /^INV-2024-001-[a-f0-9]{8}\.pdf$/,
+        /^INV-2024-001-[a-f0-9]{8}_(original|copy)\.pdf$/,
       );
 
       // Verify storage path format
       expect(result.metadata.storagePath).toMatch(
         new RegExp(
-          `^${currentYear}/${currentMonth}/INV-2024-001-[a-f0-9]{8}\\.pdf$`,
+          `^${currentYear}/${currentMonth}/INV-2024-001-[a-f0-9]{8}_(original|copy)\\.pdf$`,
         ),
       );
 
@@ -111,21 +111,32 @@ describe('File Utils', () => {
 
     it('should handle path traversal attempts', async () => {
       const maliciousId = '../../../etc/passwd';
-      const result = await createPdfStoragePath(maliciousId);
+      const result = await createPdfStoragePath(maliciousId, 'original');
 
       expect(result.filePath).toContain(config.storagePath);
       expect(result.filePath).not.toContain('..');
       expect(path.resolve(result.filePath)).toMatch(/^\/app\/pdfs\/.+\.pdf$/);
     });
 
-    it('should create valid expiration date', async () => {
-      const result = await createPdfStoragePath('test');
+    it('should create valid expiration date based on config for regular documents', async () => {
+      const result = await createPdfStoragePath('test', 'original');
 
       const createdDate = new Date(result.metadata.createdAt);
       const expiryDate = new Date(result.metadata.expiresAt);
       const timeDiff = expiryDate.getTime() - createdDate.getTime();
 
       expect(timeDiff).toBe(config.cacheDuration * 1000);
+    });
+
+    it('should create shorter expiration date for protocol documents', async () => {
+      const result = await createPdfStoragePath('test', 'original', 'protocol');
+
+      const createdDate = new Date(result.metadata.createdAt);
+      const expiryDate = new Date(result.metadata.expiresAt);
+      const timeDiff = expiryDate.getTime() - createdDate.getTime();
+      const oneDayInMs = 1000 * 60 * 60 * 24;
+
+      expect(timeDiff).toBe(oneDayInMs);
     });
   });
 

@@ -1,6 +1,8 @@
 <div class='text-center mb-8'>
   <h1 class='text-2xl mb-2'>{{t (concat 'document.' type)}}</h1>
-  <h3 class='text-lg'>{{t (concat 'document.' subType)}}</h3>
+  {{#if (eq type 'invoice')}}
+    <h3 class='text-lg'>{{t (concat 'document.' subType)}}</h3>
+  {{/if}}
 </div>
 
 <div class='flex justify-end mb-6'>

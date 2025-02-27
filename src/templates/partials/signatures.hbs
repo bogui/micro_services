@@ -25,6 +25,8 @@
   </div>
 </div>
 
-<div class='text-center text-[8px] mt-8'>
-  <p>{{t 'footer.legalNotice'}}</p>
-</div>
+{{#if (eq type 'invoice')}}
+  <div class='text-center text-[8px] mt-8'>
+    <p>{{t 'footer.legalNotice'}}</p>
+  </div>
+{{/if}}

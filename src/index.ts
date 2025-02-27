@@ -1,33 +1,50 @@
-import { redisService } from './services/redis.service';
+import { config } from './config';
 import { templateService } from './services/template.service';
+import { redisService } from './services/redis.service';
 
-async function main() {
+async function initialize() {
+  const olderThan = config.olderThan;
   try {
     // Initialize template service
     await templateService.initialize();
-    console.log('Template service initialized');
+    console.log('✓ Template service initialized');
 
-    // Start Redis service
-    console.log('PDF Generation Service started');
+    // Initialize cleanup functionality in Redis service
+    await redisService.initializeCleanup(olderThan);
+    console.log('✓ Application initialized successfully');
   } catch (error) {
-    console.error('Failed to initialize services:', error);
+    console.error('❌ Error during initialization:', error);
+    throw error;
+  }
+}
+
+async function shutdown() {
+  console.log('\nStarting graceful shutdown...');
+  try {
+    // Run Redis service cleanup (includes cleanup service shutdown)
+    await redisService.cleanup();
+    console.log('✓ All services cleaned up successfully');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Error during shutdown:', error);
     process.exit(1);
   }
 }
 
-process.on('SIGTERM', async () => {
-  console.log('Received SIGTERM signal. Cleaning up...');
-  await redisService.cleanup();
-  process.exit(0);
+// Register cleanup handlers
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+process.on('uncaughtException', error => {
+  console.error('Uncaught Exception:', error);
+  shutdown();
+});
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  shutdown();
 });
 
-process.on('SIGINT', async () => {
-  console.log('Received SIGINT signal. Cleaning up...');
-  await redisService.cleanup();
-  process.exit(0);
-});
-
-main().catch(error => {
-  console.error('Fatal error:', error);
+// Start the application
+initialize().catch(error => {
+  console.error('Failed to initialize application:', error);
   process.exit(1);
 });

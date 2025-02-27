@@ -17,47 +17,19 @@ export interface ExpiredPdf {
 }
 
 export class CleanupService {
-  private redis: Redis;
-  private findExpiredScript: string;
-  private findExpiredSha: string | null = null;
+  private readonly redis: Redis;
+  private readonly olderThan: Date | null = null;
 
-  constructor(redis: Redis) {
+  constructor(redis: Redis, olderThan?: Date) {
     this.redis = redis;
-    // Lua script to find expired PDFs
-    this.findExpiredScript = `
-      local expired = {}
-      local cursor = "0"
-      local now = ARGV[1]
-      local pattern = "pdf:invoice:*:metadata"
-      
-      repeat
-          local result = redis.call("SCAN", cursor, "MATCH", pattern, "COUNT", "100")
-          cursor = result[1]
-          local keys = result[2]
-          
-          for _, key in ipairs(keys) do
-              local metadata = redis.call("GET", key)
-              if metadata then
-                  local data = cjson.decode(metadata)
-                  if data.expiresAt <= now then
-                      table.insert(expired, {key, metadata})
-                  end
-              end
-          end
-      until cursor == "0"
-      return expired
-    `;
+    this.olderThan = olderThan ?? null;
   }
 
   async initialize(): Promise<void> {
     try {
-      const sha = await this.redis.script('LOAD', this.findExpiredScript);
-      if (typeof sha === 'string') {
-        this.findExpiredSha = sha;
-        console.log('Cleanup service initialized successfully');
-      } else {
-        throw new Error('Failed to load script: Invalid SHA returned');
-      }
+      // Simple ping to verify connection
+      await this.redis.ping();
+      console.log('Cleanup service initialized successfully');
     } catch (error) {
       console.error('Failed to initialize cleanup service:', error);
       throw error;
@@ -66,26 +38,38 @@ export class CleanupService {
 
   async findExpiredPdfs(beforeDate?: Date): Promise<ExpiredPdf[]> {
     try {
-      const now = beforeDate?.toISOString() || new Date().toISOString();
+      const now =
+        beforeDate?.toISOString() ??
+        this.olderThan?.toISOString() ??
+        new Date().toISOString();
 
-      if (!this.findExpiredSha) {
-        await this.initialize();
-      }
+      const expired: ExpiredPdf[] = [];
+      let cursor = '0';
 
-      if (!this.findExpiredSha) {
-        throw new Error('Failed to initialize cleanup service');
-      }
+      do {
+        // Scan for metadata keys
+        const [newCursor, keys] = await this.redis.scan(
+          cursor,
+          'MATCH',
+          'pdf:*:*:metadata',
+          'COUNT',
+          '100',
+        );
+        cursor = newCursor;
 
-      const results = await this.redis.evalsha(this.findExpiredSha, 0, now);
+        // Get metadata for each key
+        for (const key of keys) {
+          const metadata = await this.redis.get(key);
+          if (metadata) {
+            const data = JSON.parse(metadata) as PdfMetadata;
+            if (data.expiresAt <= now) {
+              expired.push({ key, metadata: data });
+            }
+          }
+        }
+      } while (cursor !== '0');
 
-      if (!Array.isArray(results)) {
-        throw new Error('Invalid response from Redis script');
-      }
-
-      return results.map(([key, metadata]: [string, string]) => ({
-        key,
-        metadata: JSON.parse(metadata),
-      }));
+      return expired;
     } catch (error) {
       console.error('Error finding expired PDFs:', error);
       throw error;

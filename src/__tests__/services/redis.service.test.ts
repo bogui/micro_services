@@ -131,11 +131,13 @@ describe('Redis Service', () => {
       expect(mockRedis.set).toHaveBeenCalledWith(
         `job:${mockJobData.jobId}:status`,
         'completed',
+        'EX',
+        60 * 60 * 24,
       );
 
       // Verify metadata storage
       expect(mockRedis.set).toHaveBeenCalledWith(
-        `pdf:invoice:${mockJobData.invoiceId}:metadata`,
+        `pdf:invoice:${mockJobData.invoiceId}_${mockJobData.subType}:metadata`,
         JSON.stringify(metadata),
       );
 
@@ -157,6 +159,8 @@ describe('Redis Service', () => {
       expect(mockRedis.set).toHaveBeenCalledWith(
         `job:${mockJobData.jobId}:status`,
         'failed',
+        'EX',
+        60 * 60 * 24,
       );
 
       // Verify error storage

@@ -3,7 +3,7 @@ import { JobData } from '../types';
 import { createPdfStoragePath, validateFilePath } from '../utils/file.utils';
 import { templateService } from './template.service';
 
-const FRONTEND_URL = process.env.FRONTEND_URL ?? 'https://hmo.hyperm.online';
+const FRONTEND_URL = process.env.FRONTEND_URL ?? 'https://hmo.hyper-m.online';
 const APP_NAME = process.env.APP_NAME ?? 'Hyper M';
 
 export async function generatePDF(jobData: JobData): Promise<{
@@ -43,6 +43,8 @@ export async function generatePDF(jobData: JobData): Promise<{
     // Create storage path and get metadata
     const { filePath, metadata } = await createPdfStoragePath(
       jobData.invoiceId,
+      jobData.subType,
+      jobData.type,
     );
 
     // Validate the path before writing
@@ -63,7 +65,7 @@ export async function generatePDF(jobData: JobData): Promise<{
       displayHeaderFooter: true,
       headerTemplate:
         '<div style="color: #000; display: flex; justify-content: flex-end; align-items: center; font-size: 12px; margin-top: 10px; width: 100%; gap: 4px; padding-right: 40px;">Страница <div style="color: #000;" class="pageNumber"></div> от <div style="color: #000;" class="totalPages"></div></div>',
-      footerTemplate: `<div style="color: #000; display: flex; justify-content: flex-start; align-items: center; font-size: 12px; margin-top: 10px; width: 100%; gap: 4px; padding-left: 40px;">Генерирано от <a href="${FRONTEND_URL}">${APP_NAME}</a> ${FRONTEND_URL}</div>`,
+      footerTemplate: `<div style="color: #000; display: flex; justify-content: flex-start; align-items: center; font-size: 10px; margin-top: 10px; width: 100%; gap: 4px; padding-left: 40px;">Генерирано от <a href="${FRONTEND_URL}">${APP_NAME}</a> ${FRONTEND_URL}</div>`,
     });
 
     const end = performance.now();

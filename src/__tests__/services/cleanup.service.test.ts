@@ -17,6 +17,7 @@ describe('Cleanup Service', () => {
   let cleanupService: CleanupService;
   let mockRedis: jest.Mocked<Redis>;
   let consoleErrorSpy: jest.SpyInstance;
+  let consoleLogSpy: jest.SpyInstance;
 
   const mockExpiredPdfs: ExpiredPdf[] = [
     {
@@ -44,19 +45,24 @@ describe('Cleanup Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
     mockRedis = {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      script: jest.fn().mockImplementation((command, ...args) => {
-        if (command === 'LOAD') {
-          return Promise.resolve('script-sha');
-        }
-        return Promise.reject(new Error(`Unknown script command: ${command}`));
-      }),
-      evalsha: jest
+      ping: jest.fn().mockResolvedValue('PONG'),
+      scan: jest
         .fn()
-        .mockResolvedValue(
-          mockExpiredPdfs.map(pdf => [pdf.key, JSON.stringify(pdf.metadata)]),
-        ),
+        .mockResolvedValue([
+          '0',
+          ['pdf:invoice:123:metadata', 'pdf:invoice:456:metadata'],
+        ]),
+      get: jest.fn().mockImplementation(key => {
+        if (key === 'pdf:invoice:123:metadata') {
+          return Promise.resolve(JSON.stringify(mockExpiredPdfs[0].metadata));
+        } else if (key === 'pdf:invoice:456:metadata') {
+          return Promise.resolve(JSON.stringify(mockExpiredPdfs[1].metadata));
+        }
+        return Promise.resolve(null);
+      }),
       del: jest.fn().mockResolvedValue(1),
     } as any;
 
@@ -65,21 +71,26 @@ describe('Cleanup Service', () => {
 
   afterEach(() => {
     consoleErrorSpy.mockRestore();
+    consoleLogSpy.mockRestore();
   });
 
   describe('initialization', () => {
-    it('should load the Lua script on initialization', async () => {
+    it('should initialize successfully', async () => {
       await cleanupService.initialize();
-      expect(mockRedis.script).toHaveBeenCalledWith(
-        'LOAD',
-        expect.stringContaining('local expired = {}'),
+      expect(mockRedis.ping).toHaveBeenCalled();
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        'Cleanup service initialized successfully',
       );
     });
 
     it('should handle initialization errors', async () => {
-      mockRedis.script.mockRejectedValueOnce(new Error('Script load failed'));
+      mockRedis.ping.mockRejectedValueOnce(new Error('Connection failed'));
       await expect(cleanupService.initialize()).rejects.toThrow(
-        'Script load failed',
+        'Connection failed',
+      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Failed to initialize cleanup service:',
+        expect.any(Error),
       );
     });
   });
@@ -89,6 +100,13 @@ describe('Cleanup Service', () => {
       await cleanupService.initialize();
       const result = await cleanupService.findExpiredPdfs();
       expect(result).toEqual(mockExpiredPdfs);
+      expect(mockRedis.scan).toHaveBeenCalledWith(
+        '0',
+        'MATCH',
+        'pdf:*:*:metadata',
+        'COUNT',
+        '100',
+      );
     });
 
     it('should find PDFs expired before a specific date', async () => {
@@ -96,18 +114,24 @@ describe('Cleanup Service', () => {
       const date = new Date('2024-03-14T00:00:00.000Z');
       const result = await cleanupService.findExpiredPdfs(date);
       expect(result).toEqual(mockExpiredPdfs);
-      expect(mockRedis.evalsha).toHaveBeenCalledWith(
-        expect.any(String),
-        0,
-        date.toISOString(),
+      expect(mockRedis.scan).toHaveBeenCalledWith(
+        '0',
+        'MATCH',
+        'pdf:*:*:metadata',
+        'COUNT',
+        '100',
       );
     });
 
     it('should handle Redis errors', async () => {
       await cleanupService.initialize();
-      mockRedis.evalsha.mockRejectedValueOnce(new Error('Redis error'));
+      mockRedis.scan.mockRejectedValueOnce(new Error('Redis error'));
       await expect(cleanupService.findExpiredPdfs()).rejects.toThrow(
         'Redis error',
+      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Error finding expired PDFs:',
+        expect.any(Error),
       );
     });
   });
@@ -193,7 +217,10 @@ describe('Cleanup Service', () => {
       const timer = await cleanupService.scheduleCleanup(30);
 
       // Verify initial cleanup
-      expect(mockRedis.evalsha).toHaveBeenCalledTimes(1);
+      expect(mockRedis.scan).toHaveBeenCalled();
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        'Scheduling cleanup to run every 30 minutes',
+      );
 
       // Fast-forward time and run pending timers
       jest.advanceTimersByTime(30 * 60 * 1000);
@@ -206,18 +233,23 @@ describe('Cleanup Service', () => {
       );
 
       await cleanupService.stopScheduledCleanup(timer);
+      expect(consoleLogSpy).toHaveBeenCalledWith('Scheduled cleanup stopped');
     });
 
     it('should handle cleanup errors in scheduled runs', async () => {
       await cleanupService.initialize();
-      mockRedis.evalsha
-        .mockResolvedValueOnce(
-          mockExpiredPdfs.map(pdf => [pdf.key, JSON.stringify(pdf.metadata)]),
-        )
+
+      // First call succeeds, second fails
+      mockRedis.scan
+        .mockResolvedValueOnce([
+          '0',
+          ['pdf:invoice:123:metadata', 'pdf:invoice:456:metadata'],
+        ])
         .mockRejectedValueOnce(new Error('Scheduled cleanup failed'))
-        .mockResolvedValueOnce(
-          mockExpiredPdfs.map(pdf => [pdf.key, JSON.stringify(pdf.metadata)]),
-        );
+        .mockResolvedValueOnce([
+          '0',
+          ['pdf:invoice:123:metadata', 'pdf:invoice:456:metadata'],
+        ]);
 
       const timer = await cleanupService.scheduleCleanup(30);
 
@@ -225,12 +257,8 @@ describe('Cleanup Service', () => {
       jest.advanceTimersByTime(30 * 60 * 1000);
       await Promise.resolve(); // Let any pending promises resolve
 
-      // Verify the cleanup was attempted despite the error
-      expect(mockRedis.evalsha).toHaveBeenCalledTimes(2);
-
-      // Verify error logging sequence
-      expect(consoleErrorSpy).toHaveBeenNthCalledWith(
-        1,
+      // Verify error logging
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Error finding expired PDFs:',
         expect.any(Error),
       );
