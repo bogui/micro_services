@@ -37,14 +37,21 @@ export function sanitizeFileName(originalName: string): string {
 /**
  * Creates a directory path for storing PDFs based on date and returns metadata
  * @param invoiceId - The ID of the invoice
+ * @param subType - The type of the document
+ * @param documentType - The type of the document (optional)
  * @returns Object containing the full path and metadata for storage
  */
-export async function createPdfStoragePath(invoiceId: string): Promise<{
+export async function createPdfStoragePath(
+  invoiceId: string,
+  subType: string,
+  documentType?: string,
+): Promise<{
   filePath: string;
   metadata: {
     originalName: string;
     storagePath: string;
     fileName: string;
+    subType: string;
     createdAt: string;
     expiresAt: string;
   };
@@ -55,7 +62,7 @@ export async function createPdfStoragePath(invoiceId: string): Promise<{
 
   // Sanitize the invoice ID and create a unique file name
   const sanitizedName = sanitizeFileName(invoiceId);
-  const fileName = `${sanitizedName}.pdf`;
+  const fileName = `${sanitizedName}_${subType}.pdf`;
 
   // Create directory with proper permissions
   await fs.mkdir(dirPath, { recursive: true, mode: 0o770 });
@@ -69,16 +76,26 @@ export async function createPdfStoragePath(invoiceId: string): Promise<{
   }
 
   const now = new Date();
+
+  // Set expiration date based on document type
+  let expiresAt: Date;
+  if (documentType === 'protocol') {
+    // Protocols expire after 24 hours
+    expiresAt = new Date(now.getTime() + 1000 * 60 * 60 * 24);
+  } else {
+    // Default expiration based on config
+    expiresAt = new Date(now.getTime() + config.cacheDuration * 1000);
+  }
+
   return {
     filePath,
     metadata: {
       originalName: invoiceId,
       storagePath: path.join(year, month, fileName),
       fileName,
+      subType,
       createdAt: now.toISOString(),
-      expiresAt: new Date(
-        now.getTime() + config.cacheDuration * 1000,
-      ).toISOString(),
+      expiresAt: expiresAt.toISOString(),
     },
   };
 }

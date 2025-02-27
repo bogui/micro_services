@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.5.1] - 2025-02-27
+
+### Added
+
+- Improved document lifecycle management with configurable expiration periods
+
+### Changed
+
+- Refactored document expiration date handling to centralize the logic in the `createPdfStoragePath` function
+- Protocol documents now have a 24-hour expiration period while other documents maintain the default 30-day period
+- Enhanced test coverage for expiration date handling
+
+### Fixed
+
+- Fixed inconsistent document expiration behaviors between different document types
+- Improved error handling in service initialization
+
 ## [1.5.0] - 2025-02-24
 
 ### Added
@@ -39,18 +56,6 @@
 - Fixed all tests
 
 ## [1.3.0] - 2025-02-20
-
-### Added
-
--
-
-### Changed
-
--
-
-### Fixed
-
--
 
 ### Added
 

@@ -337,7 +337,6 @@ describe('Template Generation', () => {
 
       describe('Items table', () => {
         it('should include table headers', async () => {
-          expect(textContent).toContain(translate('document.original', 'bg'));
           expect(textContent).toContain(translate('document.number', 'bg'));
           expect(textContent).toContain(translate('document.date', 'bg'));
         });

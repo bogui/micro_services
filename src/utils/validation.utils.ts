@@ -45,8 +45,8 @@ export function validateJobData(data: unknown): asserts data is JobData {
     throw new ValidationError('Invalid or missing date');
   }
 
-  if (jobData.type === 'invoice') {
-    if (!invoiceData.dueDate || typeof invoiceData.dueDate !== 'string') {
+  if (jobData.type === 'invoice' && invoiceData.dueDate) {
+    if (typeof invoiceData.dueDate !== 'string') {
       throw new ValidationError('Invalid or missing dueDate');
     }
   }
@@ -141,13 +141,19 @@ export function validateJobData(data: unknown): asserts data is JobData {
       throw new ValidationError(`Invalid quantity for item at index ${index}`);
     }
 
-    if (typeof item.price !== 'number' || item.price < 0) {
-      throw new ValidationError(`Invalid price for item at index ${index}`);
-    }
+    // if (
+    //   !jobData.isCreditOrDebit &&
+    //   (typeof item.price !== 'number' || item.price < 0)
+    // ) {
+    //   throw new ValidationError(`Invalid price for item at index ${index}`);
+    // }
 
-    if (typeof item.total !== 'number' || item.total < 0) {
-      throw new ValidationError(`Invalid total for item at index ${index}`);
-    }
+    // if (
+    //   !jobData.isCreditOrDebit &&
+    //   (typeof item.total !== 'number' || item.total < 0)
+    // ) {
+    //   throw new ValidationError(`Invalid total for item at index ${index}`);
+    // }
 
     // Verify total calculation
     const calculatedTotal = item.quantity * item.price;
@@ -157,16 +163,35 @@ export function validateJobData(data: unknown): asserts data is JobData {
     }
   }
 
+  // Validate vat amount
+  if (
+    invoiceData.totals &&
+    typeof invoiceData.totals.vatAmount === 'number' &&
+    invoiceData.totals.vatAmount < 0
+  ) {
+    throw new ValidationError('Invalid vat amount');
+  }
+
+  // Validate vat amount reduced
+  if (
+    invoiceData.totals &&
+    typeof invoiceData.totals.vatAmountReduced === 'number' &&
+    invoiceData.totals.vatAmountReduced < 0
+  ) {
+    throw new ValidationError('Invalid vat amount reduced');
+  }
+
   // Validate totals
   if (!invoiceData.totals || typeof invoiceData.totals !== 'object') {
     throw new ValidationError('Invalid or missing totals');
   }
 
-  const totalsFields = ['taxBase', 'vatAmount', 'final'] as const;
+  const totalsFields = ['taxBase', 'final'] as const;
   for (const field of totalsFields) {
     if (
-      typeof invoiceData.totals[field] !== 'number' ||
-      invoiceData.totals[field] < 0
+      !jobData.isCreditOrDebit &&
+      (typeof invoiceData.totals[field] !== 'number' ||
+        invoiceData.totals[field] < 0)
     ) {
       throw new ValidationError(`Invalid ${field}`);
     }

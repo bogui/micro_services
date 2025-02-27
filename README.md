@@ -7,6 +7,8 @@ A microservice dedicated to PDF generation for invoices and business documents, 
 - PDF generation using Puppeteer
 - Redis-based job queue
 - File caching with automatic cleanup
+  - Protocol documents expire after 24 hours
+  - Regular documents (invoices, etc.) expire after 30 days (configurable)
 - Containerized deployment
 - Concurrent job processing
 - Error handling and recovery
@@ -38,6 +40,7 @@ A microservice dedicated to PDF generation for invoices and business documents, 
    MAX_CONCURRENT_JOBS=10
    JOB_TIMEOUT=300
    CACHE_DURATION=2592000
+   OLDER_THAN_DAYS=30
    DEFAULT_LOCALE=bg
    SUPPORTED_LOCALES=bg,en
    ```
@@ -361,6 +364,15 @@ const { cleaned, failed } = await cleanupService.cleanupExpiredPdfs();
 const timer = await cleanupService.scheduleCleanup(60);
 ```
 
+### Document Expiration Policy
+
+Different document types have different expiration periods:
+
+- **Protocol documents**: Expire after 24 hours
+- **Invoice and other documents**: Expire after the configured cache duration (default: 30 days)
+
+This expiration policy is enforced at the time of document creation and is used by the cleanup service to determine which files should be removed.
+
 ## Monitoring
 
 Monitor service health using Redis keys:
@@ -397,7 +409,7 @@ The service uses Tailwind CSS for styling. Custom styles can be added in:
 
 ## Version
 
-Current version: 1.4.0
+Current version: 1.5.1
 
 ## License
 

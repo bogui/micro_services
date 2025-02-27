@@ -215,9 +215,11 @@ describe('PDF Service', () => {
 
     // Verify metadata
     expect(result.metadata.originalName).toBe(mockJobData.invoiceId);
-    expect(result.metadata.fileName).toMatch(/^INV-2024-001-[a-f0-9]{8}\.pdf$/);
+    expect(result.metadata.fileName).toMatch(
+      /^INV-2024-001-[a-f0-9]{8}_(original|copy)\.pdf$/,
+    );
     expect(result.metadata.storagePath).toMatch(
-      /^\d{4}\/\d{2}\/INV-2024-001-[a-f0-9]{8}\.pdf$/,
+      /^\d{4}\/\d{2}\/INV-2024-001-[a-f0-9]{8}_(original|copy)\.pdf$/,
     );
     expect(new Date(result.metadata.createdAt)).toBeInstanceOf(Date);
     expect(new Date(result.metadata.expiresAt)).toBeInstanceOf(Date);
@@ -259,9 +261,11 @@ describe('PDF Service', () => {
 
     // Verify metadata
     expect(result.metadata.originalName).toBe(mockJobData.invoiceId);
-    expect(result.metadata.fileName).toMatch(/^INV-2024-001-[a-f0-9]{8}\.pdf$/);
+    expect(result.metadata.fileName).toMatch(
+      /^INV-2024-001-[a-f0-9]{8}_(original|copy)\.pdf$/,
+    );
     expect(result.metadata.storagePath).toMatch(
-      /^\d{4}\/\d{2}\/INV-2024-001-[a-f0-9]{8}\.pdf$/,
+      /^\d{4}\/\d{2}\/INV-2024-001-[a-f0-9]{8}_(original|copy)\.pdf$/,
     );
     expect(new Date(result.metadata.createdAt)).toBeInstanceOf(Date);
     expect(new Date(result.metadata.expiresAt)).toBeInstanceOf(Date);
@@ -282,6 +286,34 @@ describe('PDF Service', () => {
     };
 
     await expect(generatePDF(invalidData)).rejects.toThrow();
+  });
+
+  it('should set correct expiration date for protocol documents', async () => {
+    const result = await generatePDF({
+      ...mockJobData,
+      type: 'protocol',
+    });
+
+    const createdDate = new Date(result.metadata.createdAt);
+    const expiryDate = new Date(result.metadata.expiresAt);
+    const timeDiff = expiryDate.getTime() - createdDate.getTime();
+    const oneDayInMs = 1000 * 60 * 60 * 24;
+
+    expect(timeDiff).toBe(oneDayInMs);
+  });
+
+  it('should set default expiration date for non-protocol documents', async () => {
+    const result = await generatePDF({
+      ...mockJobData,
+      type: 'invoice',
+    });
+
+    const createdDate = new Date(result.metadata.createdAt);
+    const expiryDate = new Date(result.metadata.expiresAt);
+    const timeDiff = expiryDate.getTime() - createdDate.getTime();
+
+    // Default cache duration from config
+    expect(timeDiff).toBe(2592000 * 1000);
   });
 
   it('should cleanup resources after generation', async () => {

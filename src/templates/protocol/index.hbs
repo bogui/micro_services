@@ -1,4 +1,4 @@
-{{#> layout title='document.title' documentNumber=documentNumber}}
+{{#> layout title=(concat 'document.' type ) documentNumber=documentNumber}}
     <div class="document protocol">
         {{> header 
             type='protocol' 
