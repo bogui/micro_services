@@ -202,7 +202,7 @@ describe('Template Generation', () => {
           const headers = [
             'number',
             'description',
-            'unit',
+            // 'unit', // Removed due to the fact, that there should be no unit in the table as separate column, but I left the column, removing the title
             'quantity',
             'price',
             'total',

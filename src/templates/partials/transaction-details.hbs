@@ -1,3 +1,8 @@
+{{#if (and inWords (eq locale 'bg'))}}
+  <div class="py-4">
+    <p><strong>{{t 'inWords'}}:</strong> {{inWords}}</p>
+  </div>
+{{/if}}
 <div class='flex mb-8'>
   {{#if transaction}}
     <div class='w-2/3'>
