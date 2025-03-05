@@ -320,6 +320,8 @@ const sampleData: JobData = {
         },
       ],
     },
+    inWords:
+      'Сто осемдесет и една хиляди сто деветдесет и пет лева и осемдесет и осем стотин лева',
   },
 };
 
@@ -340,9 +342,12 @@ app.get('/', async (req, res) => {
   locale = (req.query.locale as string) || 'bg';
   currency = (req.query.currency as string) || 'BGN';
   const type = req.query.type || 'invoice';
+  const noVat = req.query.noVat === 'true' || false;
   const subType = req.query.subType || 'original';
   const vatResponse = req.query.vatResponse || null;
   const pdf = req.query.pdf || false;
+
+  sampleData.data.noVat = noVat;
 
   if (vatResponse) {
     sampleData.data.vatResponse = {

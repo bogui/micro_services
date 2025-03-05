@@ -1,0 +1,35 @@
+src/__tests__/
+src/examples/
+scripts/
+coverage/
+.github/
+redis-data/
+dist/
+.gitignore
+.eslintrc.js
+.prettierrc
+.vscode/
+jest.config.js
+redis.acl.example
+nodemon.json
+docker-compose.yml
+# Exclude environment files
+.env
+.env.*
+
+# Node.js
+node_modules
+npm-debug.log
+
+# Version control
+.git
+.gitignore
+
+# IDE files
+.idea
+.vscode
+
+# Other files that shouldn't be in the Docker image
+README.md
+DOCKERIZE.md
+CHANGELOG.md

@@ -26,6 +26,7 @@ export interface InvoiceData {
   vatResponse?: VatResponse | null;
   noVat: boolean;
   noVatCause?: string | null;
+  inWords?: string;
 }
 
 export interface VatResponse {

@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.6.0] - 2025-03-05
+
+### Added
+
+- inWords option. Shows the total with tax in words for BG invoice
+- translation in `bg.json` for inWords
+
+### Changed
+
+- invoice template to pass inWords and locale props to partial
+- protocol template to pass inWords and locale props to partials
+- Dockerfile production section
+- Small templates styles
+
+### Fixed
+
+- Copieng the dist forlder from local disc to container - prone to unexpected errors. Added to .dockerignore
+
 ## [1.5.1] - 2025-02-27
 
 ### Added
