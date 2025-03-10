@@ -4,7 +4,7 @@ A microservice dedicated to PDF generation for invoices and business documents, 
 
 ## Features
 
-- PDF generation using Puppeteer
+- PDF generation using Playwright Python (v1.50.0)
 - Redis-based job queue
 - File caching with automatic cleanup
   - Protocol documents expire after 24 hours
@@ -18,7 +18,7 @@ A microservice dedicated to PDF generation for invoices and business documents, 
 - Translation system with fallback to Bulgarian
 - Template customization with Handlebars
 - Live template preview during development
-- Tailwind CSS styling
+- Tailwind CSS styling with proper rendering
 - Comprehensive test coverage
 - Automatic currency formatting
 - Date formatting with locale support
@@ -28,6 +28,15 @@ A microservice dedicated to PDF generation for invoices and business documents, 
 - Docker and Docker Compose
 - Node.js 21+ (for local development)
 - Redis 7+ (provided via Docker Compose)
+- Python 3.8+ (for local development)
+
+## Python Dependencies
+
+The service requires the following Python packages:
+
+```txt
+playwright==1.50.0
+```
 
 ## Setup
 
@@ -409,10 +418,31 @@ The service uses Tailwind CSS for styling. Custom styles can be added in:
 
 ## Version
 
-Current version: 1.5.1
+Current version: 1.6.1
 
 ## License
 
 ISC
 
 # PDF Service Documentation
+
+## PDF Generation
+
+The service now uses Playwright Python for PDF generation, which provides:
+
+- Better CSS support including Tailwind CSS
+- Improved font rendering
+- More accurate page layouts
+- Better handling of modern web features
+- Improved response times - from 6s cold call to 2s
+
+### PDF Generation Configuration
+
+The PDF generation is configured with the following settings:
+
+- Format: A4
+- Margins: 20mm top, 0mm others
+- Background graphics enabled
+- Custom headers and footers
+- Full support for modern CSS features
+- Proper font rendering

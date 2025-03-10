@@ -1,5 +1,5 @@
 {{#if (eq type 'invoice')}}
-<table class="w-full mb-8 border-collapse text-xs">
+<table class="w-full mb-8 border-collapse">
   <thead>
     <tr class="border-b border-gray-300">
       <th class="text-left p-2">{{t 'document.table.number'}}</th>
@@ -24,7 +24,7 @@
   </tbody>
   <tfoot style="line-height: 1.25rem;">
     <tr>
-      <td rowspan="{{#if (ne totals.vatAmountReduced 0)}}4{{else}}3{{/if}}" colspan="3" class="text-left px-2">
+      <td rowspan="{{#if (and (ne totals.vatAmountReduced null) (ne totals.vatAmountReduced 0))}}4{{else}}3{{/if}}" colspan="3" class="text-left px-2">
         {{#if noVat}}
             <p>
               <span class="font-bold">{{t 'document.noVatReason'}}:</span> {{noVatCause}}
@@ -34,11 +34,13 @@
       <td colspan="2" class="text-right px-2 font-bold">{{t 'document.totals.taxBase'}}</td>
       <td class="text-right px-2">{{format totals.taxBase currency}}</td>
     </tr>
+    {{#if (and (ne totals.vatAmount null) (ne totals.vatAmount 0))}}
     <tr>
       <td colspan="2" class="text-right px-2 font-bold">{{t 'document.totals.vatAmount'}}</td>
       <td class="text-right px-2">{{format totals.vatAmount currency}}</td>
     </tr>
-    {{#if (ne totals.vatAmountReduced 0)}}
+    {{/if}}
+    {{#if (and (ne totals.vatAmountReduced null) (ne totals.vatAmountReduced 0))}}
     <tr>
       <td colspan="2" class="text-right px-2 font-bold">{{t 'document.totals.vatAmountReduced'}}</td>
       <td class="text-right px-2">{{format totals.vatAmountReduced currency}}</td>

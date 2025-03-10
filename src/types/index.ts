@@ -4,7 +4,7 @@ export interface JobData {
   locale?: string;
   currency?: string;
   type: 'invoice' | 'credit' | 'debit' | 'protocol'; // Optional, defaults to "invoice" if not specified
-  subType: 'copy' | 'original';
+  subType: 'copy' | 'original' | 'invoice';
   isCreditOrDebit: boolean;
   data: InvoiceData;
   customStyles?: string; // Optional custom CSS styles
@@ -27,6 +27,7 @@ export interface InvoiceData {
   noVat: boolean;
   noVatCause?: string | null;
   inWords?: string;
+  annuledAt?: string | null;
 }
 
 export interface VatResponse {

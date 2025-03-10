@@ -1,58 +1,62 @@
-<div class='grid grid-cols-2 mb-12'>
-  <div class='border border-e-0 p-4'>
-    <table class='w-full'>
-      <tr>
-        <th class='text-left'>{{t 'document.recipient.title'}}</th>
-        <td>{{recipient.name}}</td>
-      </tr>
-      <tr>
-        <th class='text-left'>{{t 'document.recipient.vat'}}</th>
-        <td>{{recipient.vatNumber}}</td>
-      </tr>
-      <tr>
-        <th class='text-left'>{{t 'document.recipient.id'}}</th>
-        <td>{{recipient.identNumber}}</td>
-      </tr>
-      <tr>
-        <th class='text-left'>{{t 'document.recipient.city'}}</th>
-        <td>{{recipient.city}}</td>
-      </tr>
-      <tr>
-        <th class='text-left'>{{t 'document.recipient.address'}}</th>
-        <td>{{recipient.address}}</td>
-      </tr>
-      <tr>
-        <th class='text-left'>{{t 'document.recipient.representative'}}</th>
-        <td>{{recipient.representative}}</td>
-      </tr>
-    </table>
-  </div>
-  <div class='border p-4'>
-    <table class='w-full'>
-      <tr>
-        <th class='text-left'>{{t 'document.supplier.title'}}</th>
-        <td>{{supplier.name}}</td>
-      </tr>
-      <tr>
-        <th class='text-left'>{{t 'document.supplier.vat'}}</th>
-        <td>{{supplier.vatNumber}}</td>
-      </tr>
-      <tr>
-        <th class='text-left'>{{t 'document.supplier.id'}}</th>
-        <td>{{supplier.identNumber}}</td>
-      </tr>
-      <tr>
-        <th class='text-left'>{{t 'document.supplier.city'}}</th>
-        <td>{{supplier.city}}</td>
-      </tr>
-      <tr>
-        <th class='text-left'>{{t 'document.supplier.address'}}</th>
-        <td>{{supplier.address}}</td>
-      </tr>
-      <tr>
-        <th class='text-left'>{{t 'document.supplier.representative'}}</th>
-        <td>{{supplier.representative}}</td>
-      </tr>
-    </table>
-  </div>
+<div class='mb-12 py-4'>
+  <table class='w-full border-collapse border border-gray-300 header-table'>
+    <tr>
+      <td class='text-left font-semibold pr-1'>{{t
+          'document.recipient.title'
+        }}</td>
+      <td class='w-1/3 border-r border-gray-300'>{{recipient.name}}</td>
+      <td class='text-left font-semibold pr-1'>{{t
+          'document.supplier.title'
+        }}</td>
+      <td class='w-1/3'>{{supplier.name}}</td>
+    </tr>
+    <tr>
+      <td class='text-left font-semibold pr-1'>{{t
+          'document.recipient.vat'
+        }}</td>
+      <td class='border-r border-gray-300'>{{recipient.vatNumber}}</td>
+      <td class='text-left font-semibold pr-1'>{{t
+          'document.supplier.vat'
+        }}</td>
+      <td>{{supplier.vatNumber}}</td>
+    </tr>
+    <tr>
+      <td class='text-left font-semibold pr-1'>{{t
+          'document.recipient.id'
+        }}</td>
+      <td class='border-r border-gray-300'>{{recipient.identNumber}}</td>
+      <td class='text-left font-semibold pr-1'>{{t 'document.supplier.id'}}</td>
+      <td>{{supplier.identNumber}}</td>
+    </tr>
+    <tr>
+      <td class='text-left font-semibold pr-1'>{{t
+          'document.recipient.city'
+        }}</td>
+      <td class='border-r border-gray-300'>{{recipient.city}}</td>
+      <td class='text-left font-semibold pr-1'>{{t
+          'document.supplier.city'
+        }}</td>
+      <td>{{supplier.city}}</td>
+    </tr>
+    <tr>
+      <td class='text-left font-semibold pr-1'>{{t
+          'document.recipient.address'
+        }}</td>
+      <td class='border-r border-gray-300'>{{recipient.address}}</td>
+      <td class='text-left font-semibold pr-1'>{{t
+          'document.supplier.address'
+        }}</td>
+      <td>{{supplier.address}}</td>
+    </tr>
+    <tr>
+      <td class='text-left font-semibold pr-1'>{{t
+          'document.recipient.representative'
+        }}</td>
+      <td class='border-r border-gray-300'>{{recipient.representative}}</td>
+      <td class='text-left font-semibold pr-1'>{{t
+          'document.supplier.representative'
+        }}</td>
+      <td>{{supplier.representative}}</td>
+    </tr>
+  </table>
 </div>
