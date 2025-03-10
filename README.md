@@ -1,3 +1,7 @@
+[![Hyper M]([https://ariadnegraphql.org/img/logo-horizontal-sm.png](https://sp-ao.shortpixel.ai/client/to_webp,q_glossy,ret_img/https://kdconsult.eu/wp-content/uploads/2020/12/kd-logo.png))](https://kdconsult.eu)
+[![Build Status](https://github.com/bogui/micro_services/actions/workflows/ci.yml/badge.svg)](https://github.com/bogui/micro_services/actions)
+- - - - - - - - -
+
 # PDF Generation Service
 
 A microservice dedicated to PDF generation for invoices and business documents, designed to optimize container size and resource utilization.
