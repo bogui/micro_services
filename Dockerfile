@@ -20,17 +20,14 @@ ENV LANG=bg_BG.UTF-8 \
 
 WORKDIR /app
 
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
+RUN ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime && echo "$TZ" > /etc/timezone \
     && apt-get update && apt-get install -y --no-install-recommends \
     nodejs \
     python3-pip \
     python3-venv \
     tzdata \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN npm --version
-
-RUN python3 -m venv /app/venv
+    && rm -rf /var/lib/apt/lists/* \
+    && python3 -m venv /app/venv
 
 COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip \
@@ -48,8 +45,7 @@ COPY --from=build /app/src/templates ./src/templates
 COPY --from=build /app/src/locales ./dist/locales
 
 RUN mkdir -p /home/pwuser/Downloads /app/pdfs \
-    && chown -R pwuser:pwuser /home/pwuser \
-    && chown -R pwuser:pwuser /app
+    && chown -R pwuser:pwuser /home/pwuser/Downloads /app/pdfs
 
 USER pwuser
 
