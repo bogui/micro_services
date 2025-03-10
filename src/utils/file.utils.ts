@@ -23,7 +23,7 @@ export function sanitizeFileName(originalName: string): string {
     Date.now(),
     Math.random(),
     process.pid || Math.random(), // Use process ID if available, otherwise another random value
-  ].join('-');
+  ].join('_');
 
   const hash = crypto
     .createHash('sha256')
@@ -31,7 +31,7 @@ export function sanitizeFileName(originalName: string): string {
     .digest('hex')
     .slice(0, 8);
 
-  return `${sanitized}-${hash}`;
+  return `${sanitized}_${hash}`;
 }
 
 /**

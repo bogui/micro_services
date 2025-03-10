@@ -1,7 +1,18 @@
 <div class='text-center mb-8'>
-  <h1 class='text-2xl mb-2'>{{t (concat 'document.' type)}}</h1>
-  {{#if (eq type 'invoice')}}
-    <h3 class='text-lg'>{{t (concat 'document.' subType)}}</h3>
+  {{#if annuledAt}}
+    <h1 class='text-3xl mb-2 line-through'>{{t (concat 'document.' type)}}</h1>
+    {{#if (or (eq type 'invoice') (eq type 'credit') (eq type 'debit'))}}
+      <h3 class='text-lg line-through'>{{t (concat 'document.' subType)}}</h3>
+    {{/if}}
+    <div class='text-red-500'>
+      <h3 class='text-lg'>{{t 'document.annuledAt'}}</h3>
+      <p class='text-lg'>{{formatDate annuledAt 'short'}}</p>
+    </div>
+  {{else}}
+    <h1 class='text-3xl mb-2'>{{t (concat 'document.' type)}}</h1>
+    {{#if (or (eq type 'invoice') (eq type 'credit') (eq type 'debit'))}}
+      <h3 class='text-lg'>{{t (concat 'document.' subType)}}</h3>
+    {{/if}}
   {{/if}}
 </div>
 
@@ -21,18 +32,20 @@
         <td>{{formatDate dueDate 'short'}}</td>
       </tr>
     {{/if}}
-    {{#if isCreditOrDebit}}
-      <tr>
-        <td colspan='2'>&nbsp;</td>
-      </tr>
-      <tr>
-        <td>{{t 'document.relatedDocument.title'}}:</td>
-        <td>{{relatedDocument.documentNumber}}</td>
-      </tr>
-      <tr>
-        <td>{{t 'document.relatedDocument.date'}}:</td>
-        <td>{{formatDate relatedDocument.date 'short'}}</td>
-      </tr>
+    {{#if (not (eq type 'protocol'))}}
+      {{#if isCreditOrDebit}}
+        <tr>
+          <td colspan='2'>&nbsp;</td>
+        </tr>
+        <tr>
+          <td>{{t 'document.relatedDocument.title'}}:</td>
+          <td>{{relatedDocument.documentNumber}}</td>
+        </tr>
+        <tr>
+          <td>{{t 'document.relatedDocument.date'}}:</td>
+          <td>{{formatDate relatedDocument.date 'short'}}</td>
+        </tr>
+      {{/if}}
     {{/if}}
   </table>
 </div>

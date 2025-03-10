@@ -10,6 +10,7 @@
     "date": "Date",
     "dueDate": "Due Date",
     "noVatReason": "Reason for not charging VAT",
+    "annuledAt": "Annuled at",
     "relatedDocument": {
       "title": "Related Document",
       "number": "Number",

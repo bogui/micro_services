@@ -23,10 +23,10 @@ describe('File Utils', () => {
   describe('sanitizeFileName', () => {
     it('should sanitize file names correctly', () => {
       const testCases = [
-        { input: 'invoice-123', expected: /^invoice-123-[a-f0-9]{8}$/ },
-        { input: 'test@file', expected: /^testfile-[a-f0-9]{8}$/ },
-        { input: '../malicious/path', expected: /^maliciouspath-[a-f0-9]{8}$/ },
-        { input: 'invoice_123', expected: /^invoice_123-[a-f0-9]{8}$/ },
+        { input: 'invoice-123', expected: /^invoice-123_[a-f0-9]{8}$/ },
+        { input: 'test@file', expected: /^testfile_[a-f0-9]{8}$/ },
+        { input: '../malicious/path', expected: /^maliciouspath_[a-f0-9]{8}$/ },
+        { input: 'invoice_123', expected: /^invoice_123_[a-f0-9]{8}$/ },
       ];
 
       testCases.forEach(({ input, expected }) => {
@@ -55,7 +55,7 @@ describe('File Utils', () => {
 
       // All names should follow the expected pattern
       for (const result of results) {
-        expect(result).toMatch(/^test-file-[a-f0-9]{8}$/);
+        expect(result).toMatch(/^test-file_[a-f0-9]{8}$/);
       }
     });
   });
@@ -80,13 +80,13 @@ describe('File Utils', () => {
 
       // Verify file name format
       expect(result.metadata.fileName).toMatch(
-        /^INV-2024-001-[a-f0-9]{8}_(original|copy)\.pdf$/,
+        /^INV-2024-001_[a-f0-9]{8}_(original|copy)\.pdf$/,
       );
 
       // Verify storage path format
       expect(result.metadata.storagePath).toMatch(
         new RegExp(
-          `^${currentYear}/${currentMonth}/INV-2024-001-[a-f0-9]{8}_(original|copy)\\.pdf$`,
+          `^${currentYear}/${currentMonth}/INV-2024-001_[a-f0-9]{8}_(original|copy)\\.pdf$`,
         ),
       );
 

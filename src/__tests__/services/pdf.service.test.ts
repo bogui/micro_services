@@ -1,5 +1,5 @@
-jest.mock('puppeteer', () => ({
-  launch: jest.fn(),
+jest.mock('child_process', () => ({
+  spawn: jest.fn(),
 }));
 jest.mock('fs/promises');
 jest.mock('path', () => ({
@@ -25,11 +25,11 @@ import { generatePDF } from '../../services/pdf.service';
 import { mockJobData } from '../setup';
 import fs from 'fs/promises';
 import { templateService } from '../../services/template.service';
+import { spawn } from 'child_process';
 
 describe('PDF Service', () => {
-  let mockBrowser: { newPage: jest.Mock; close: jest.Mock };
-  let mockPage: { setContent: jest.Mock; pdf: jest.Mock; close: jest.Mock };
-  const mockPuppeteer = jest.requireMock('puppeteer');
+  let mockPythonProcess: any;
+  const mockSpawn = spawn as jest.Mock;
 
   beforeAll(async () => {
     // Mock file system operations for template service
@@ -143,18 +143,26 @@ describe('PDF Service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockPage = {
-      setContent: jest.fn(),
-      pdf: jest.fn().mockResolvedValue(undefined),
-      close: jest.fn(),
+    // Setup mock Python process
+    mockPythonProcess = {
+      stdout: {
+        on: jest.fn((event: string, callback: (data: Buffer) => void) => {
+          if (event === 'data') {
+            callback(Buffer.from(JSON.stringify({ success: true })));
+          }
+        }),
+      },
+      stderr: {
+        on: jest.fn(),
+      },
+      on: jest.fn((event: string, callback: (code: number) => void) => {
+        if (event === 'close') {
+          callback(0);
+        }
+      }),
     };
 
-    mockBrowser = {
-      newPage: jest.fn().mockResolvedValue(mockPage),
-      close: jest.fn(),
-    };
-
-    mockPuppeteer.launch.mockResolvedValue(mockBrowser);
+    mockSpawn.mockReturnValue(mockPythonProcess);
     (fs.mkdir as jest.Mock).mockResolvedValue(undefined);
   });
 
@@ -164,62 +172,40 @@ describe('PDF Service', () => {
       type: 'invoice',
     });
 
-    expect(mockPuppeteer.launch).toHaveBeenCalledWith({
-      headless: true,
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--disable-gpu',
-      ],
-    });
+    // Verify Python script was called with correct arguments
+    expect(mockSpawn).toHaveBeenCalledWith(
+      'python3',
+      expect.arrayContaining(['src/scripts/pdf_generator.py']),
+    );
 
-    // Verify HTML content
-    const htmlContent = mockPage.setContent.mock.calls[0][0];
-    expect(htmlContent).toContain(
+    // Verify the data passed to Python script
+    const pythonData = JSON.parse(mockSpawn.mock.calls[0][1][1]);
+    expect(pythonData.htmlContent).toContain(
       `<title>Фактура #${mockJobData.data.documentNumber}</title>`,
     );
-    expect(htmlContent).toContain(mockJobData.data.supplier.name);
-    expect(htmlContent).toContain(mockJobData.data.recipient.name);
-    expect(htmlContent).toContain(`#${mockJobData.data.documentNumber}`);
-    expect(htmlContent).toContain(
+    expect(pythonData.htmlContent).toContain(mockJobData.data.supplier.name);
+    expect(pythonData.htmlContent).toContain(mockJobData.data.recipient.name);
+    expect(pythonData.htmlContent).toContain(
+      `#${mockJobData.data.documentNumber}`,
+    );
+    expect(pythonData.htmlContent).toContain(
       `${mockJobData.data.totals.taxBase.toFixed(2)} лв.`,
     );
-    expect(htmlContent).toContain(
+    expect(pythonData.htmlContent).toContain(
       `${mockJobData.data.totals.vatAmount.toFixed(2)} лв.`,
     );
-    expect(htmlContent).toContain(
+    expect(pythonData.htmlContent).toContain(
       `${mockJobData.data.totals.final.toFixed(2)} лв.`,
     );
-    expect(htmlContent).toContain('Thank you for your business!');
-
-    // Verify PDF generation options
-    expect(mockPage.pdf).toHaveBeenCalledWith({
-      path: expect.stringContaining('.pdf'),
-      format: 'A4',
-      margin: {
-        top: '20px',
-        right: 0,
-        bottom: '0px',
-        left: 0,
-      },
-      preferCSSPageSize: true,
-      printBackground: true,
-      displayHeaderFooter: true,
-      footerTemplate: expect.stringContaining('Hyper M'),
-      headerTemplate: expect.stringContaining('pageNumber'),
-    });
+    expect(pythonData.htmlContent).toContain('Thank you for your business!');
 
     // Verify metadata
     expect(result.metadata.originalName).toBe(mockJobData.invoiceId);
     expect(result.metadata.fileName).toMatch(
-      /^INV-2024-001-[a-f0-9]{8}_(original|copy)\.pdf$/,
+      /^INV-2024-001_[a-f0-9]{8}_(original|copy)\.pdf$/,
     );
     expect(result.metadata.storagePath).toMatch(
-      /^\d{4}\/\d{2}\/INV-2024-001-[a-f0-9]{8}_(original|copy)\.pdf$/,
+      /^\d{4}\/\d{2}\/INV-2024-001_[a-f0-9]{8}_(original|copy)\.pdf$/,
     );
     expect(new Date(result.metadata.createdAt)).toBeInstanceOf(Date);
     expect(new Date(result.metadata.expiresAt)).toBeInstanceOf(Date);
@@ -231,51 +217,55 @@ describe('PDF Service', () => {
       type: 'protocol',
     });
 
-    // Verify HTML content
-    const htmlContent = mockPage.setContent.mock.calls[0][0];
-    expect(htmlContent).toContain(
+    // Verify Python script was called with correct arguments
+    expect(mockSpawn).toHaveBeenCalledWith(
+      'python3',
+      expect.arrayContaining(['src/scripts/pdf_generator.py']),
+    );
+
+    // Verify the data passed to Python script
+    const pythonData = JSON.parse(mockSpawn.mock.calls[0][1][1]);
+    expect(pythonData.htmlContent).toContain(
       `<title>Протокол #${mockJobData.data.documentNumber}</title>`,
     );
-    expect(htmlContent).toContain(mockJobData.data.supplier.name);
-    expect(htmlContent).toContain(mockJobData.data.recipient.name);
-    expect(htmlContent).toContain(`#${mockJobData.data.documentNumber}`);
-    expect(htmlContent).toContain('Получател');
-    expect(htmlContent).toContain('Доставчик');
-
-    // Verify PDF generation options
-    expect(mockPage.pdf).toHaveBeenCalledWith({
-      path: expect.stringContaining('.pdf'),
-      format: 'A4',
-      margin: {
-        top: '20px',
-        right: 0,
-        bottom: '0px',
-        left: 0,
-      },
-      preferCSSPageSize: true,
-      printBackground: true,
-      displayHeaderFooter: true,
-      footerTemplate: expect.stringContaining('Hyper M'),
-      headerTemplate: expect.stringContaining('pageNumber'),
-    });
+    expect(pythonData.htmlContent).toContain(mockJobData.data.supplier.name);
+    expect(pythonData.htmlContent).toContain(mockJobData.data.recipient.name);
+    expect(pythonData.htmlContent).toContain(
+      `#${mockJobData.data.documentNumber}`,
+    );
+    expect(pythonData.htmlContent).toContain('Получател');
+    expect(pythonData.htmlContent).toContain('Доставчик');
 
     // Verify metadata
     expect(result.metadata.originalName).toBe(mockJobData.invoiceId);
     expect(result.metadata.fileName).toMatch(
-      /^INV-2024-001-[a-f0-9]{8}_(original|copy)\.pdf$/,
+      /^INV-2024-001_[a-f0-9]{8}_(original|copy)\.pdf$/,
     );
     expect(result.metadata.storagePath).toMatch(
-      /^\d{4}\/\d{2}\/INV-2024-001-[a-f0-9]{8}_(original|copy)\.pdf$/,
+      /^\d{4}\/\d{2}\/INV-2024-001_[a-f0-9]{8}_(original|copy)\.pdf$/,
     );
     expect(new Date(result.metadata.createdAt)).toBeInstanceOf(Date);
     expect(new Date(result.metadata.expiresAt)).toBeInstanceOf(Date);
   });
 
   it('should handle PDF generation errors', async () => {
-    mockPage.pdf.mockRejectedValueOnce(new Error('PDF generation failed'));
+    mockPythonProcess.stderr.on.mockImplementation(
+      (event: string, callback: (data: Buffer) => void) => {
+        if (event === 'data') {
+          callback(Buffer.from('Python script error'));
+        }
+      },
+    );
+    mockPythonProcess.on.mockImplementation(
+      (event: string, callback: (code: number) => void) => {
+        if (event === 'close') {
+          callback(1);
+        }
+      },
+    );
 
     await expect(generatePDF(mockJobData)).rejects.toThrow(
-      'PDF generation failed',
+      'Failed to generate PDF: Python script failed: Python script error',
     );
   });
 
@@ -314,20 +304,5 @@ describe('PDF Service', () => {
 
     // Default cache duration from config
     expect(timeDiff).toBe(2592000 * 1000);
-  });
-
-  it('should cleanup resources after generation', async () => {
-    await generatePDF(mockJobData);
-    expect(mockBrowser.close).toHaveBeenCalled();
-  });
-
-  it('should cleanup resources on error', async () => {
-    mockPage.pdf.mockRejectedValueOnce(new Error('Generation failed'));
-
-    try {
-      await generatePDF(mockJobData);
-    } catch (error) {
-      expect(mockBrowser.close).toHaveBeenCalled();
-    }
   });
 });

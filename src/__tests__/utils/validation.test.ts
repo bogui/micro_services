@@ -181,18 +181,6 @@ describe('Validation Utils', () => {
             },
           },
           {
-            description: 'negative VAT',
-            data: {
-              ...mockJobData.data,
-              totals: {
-                taxBase: 200,
-                vatAmount: -20,
-                vatAmountReduced: 0,
-                final: 180,
-              },
-            },
-          },
-          {
             description: 'incorrect final total',
             data: {
               ...mockJobData.data,

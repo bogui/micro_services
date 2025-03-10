@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import { spawn } from 'child_process';
 import { JobData } from '../types';
 import { createPdfStoragePath, validateFilePath } from '../utils/file.utils';
 import { templateService } from './template.service';
@@ -19,26 +19,9 @@ export async function generatePDF(jobData: JobData): Promise<{
 }> {
   const start = performance.now();
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--disable-gpu',
-    ],
-  });
-
   try {
-    const page = await browser.newPage();
-
     // Generate HTML content using template service
     const htmlContent = await templateService.render(jobData);
-
-    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
 
     // Create storage path and get metadata
     const { filePath, metadata } = await createPdfStoragePath(
@@ -50,29 +33,50 @@ export async function generatePDF(jobData: JobData): Promise<{
     // Validate the path before writing
     validateFilePath(filePath);
 
-    // Generate PDF
-    await page.pdf({
-      path: filePath,
-      format: 'A4',
-      printBackground: true,
-      margin: {
-        top: '20px',
-        right: 0,
-        bottom: '0px',
-        left: 0,
-      },
-      preferCSSPageSize: true,
-      displayHeaderFooter: true,
-      headerTemplate:
-        '<div style="color: #000; display: flex; justify-content: flex-end; align-items: center; font-size: 12px; margin-top: 10px; width: 100%; gap: 4px; padding-right: 40px;">Страница <div style="color: #000;" class="pageNumber"></div> от <div style="color: #000;" class="totalPages"></div></div>',
-      footerTemplate: `<div style="color: #000; display: flex; justify-content: flex-start; align-items: center; font-size: 10px; margin-top: 10px; width: 100%; gap: 4px; padding-left: 40px;">Генерирано от <a href="${FRONTEND_URL}">${APP_NAME}</a> ${FRONTEND_URL}</div>`,
+    // Prepare data for Python script
+    const pythonData = {
+      htmlContent,
+      filePath,
+      frontendUrl: FRONTEND_URL,
+      appName: APP_NAME,
+    };
+
+    // Execute Python script
+    const result = await new Promise((resolve, reject) => {
+      const pythonProcess = spawn('python3', [
+        'src/scripts/pdf_generator.py',
+        JSON.stringify(pythonData),
+      ]);
+
+      let outputData = '';
+      let errorData = '';
+
+      pythonProcess.stdout.on('data', data => {
+        outputData += data.toString();
+      });
+
+      pythonProcess.stderr.on('data', data => {
+        errorData += data.toString();
+      });
+
+      pythonProcess.on('close', code => {
+        if (code !== 0) {
+          reject(new Error(`Python script failed: ${errorData}`));
+        } else {
+          resolve(JSON.parse(outputData));
+        }
+      });
     });
+
+    console.log('result', result);
 
     const end = performance.now();
     const time = `PDF generation took ${end - start} milliseconds`;
 
+    console.log('time', time);
+
     return { filePath, metadata, time };
-  } finally {
-    await browser.close();
+  } catch (error: any) {
+    throw new Error(`Failed to generate PDF: ${error.message}`);
   }
 }

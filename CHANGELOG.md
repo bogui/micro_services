@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.6.1] - 2025-03-07
+
+### Added
+
+- Migrated from Puppeteer to Playwright for PDF generation
+- Added Python script for PDF generation using Playwright
+- Improved test coverage for Python script integration
+
+### Changed
+
+- Updated PDF generation service to use Python script with Playwright
+- Refactored test suite to mock Python process instead of browser
+- Updated dependencies to use Playwright instead of Puppeteer
+- Improved error handling for Python script execution
+
+### Fixed
+
+- Fixed failing tests after Puppeteer to Playwright migration
+- Fixed test assertions to match new Python script-based implementation
+- Fixed resource cleanup in PDF generation process
+
 ## [1.6.0] - 2025-03-05
 
 ### Added

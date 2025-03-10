@@ -346,6 +346,7 @@ app.get('/', async (req, res) => {
   const subType = req.query.subType || 'original';
   const vatResponse = req.query.vatResponse || null;
   const pdf = req.query.pdf || false;
+  const annuledAt = req.query.annuledAt || null;
 
   sampleData.data.noVat = noVat;
 
@@ -362,6 +363,11 @@ app.get('/', async (req, res) => {
 
   if (type === 'credit' || type === 'debit') {
     sampleData.isCreditOrDebit = true;
+  }
+
+  if (annuledAt) {
+    console.log('annuledAt', annuledAt);
+    sampleData.data.annuledAt = annuledAt as string;
   }
 
   sampleData.type = type as 'invoice' | 'credit' | 'debit' | 'protocol';

@@ -10,6 +10,7 @@
     "date": "Дата",
     "dueDate": "Дата на падеж",
     "noVatReason": "Причина за неначисляване на ДДС",
+    "annuledAt": "Анулирано на",
     "relatedDocument": {
       "title": "Свързан документ",
       "number": "Номер",

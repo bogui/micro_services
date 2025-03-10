@@ -137,48 +137,12 @@ export function validateJobData(data: unknown): asserts data is JobData {
       );
     }
 
-    if (typeof item.quantity !== 'number' || item.quantity <= 0) {
-      throw new ValidationError(`Invalid quantity for item at index ${index}`);
-    }
-
-    // if (
-    //   !jobData.isCreditOrDebit &&
-    //   (typeof item.price !== 'number' || item.price < 0)
-    // ) {
-    //   throw new ValidationError(`Invalid price for item at index ${index}`);
-    // }
-
-    // if (
-    //   !jobData.isCreditOrDebit &&
-    //   (typeof item.total !== 'number' || item.total < 0)
-    // ) {
-    //   throw new ValidationError(`Invalid total for item at index ${index}`);
-    // }
-
     // Verify total calculation
     const calculatedTotal = item.quantity * item.price;
     if (Math.abs(calculatedTotal - item.total) > 0.01) {
       // Allow for small floating-point differences
       throw new ValidationError(`Total mismatch for item at index ${index}`);
     }
-  }
-
-  // Validate vat amount
-  if (
-    invoiceData.totals &&
-    typeof invoiceData.totals.vatAmount === 'number' &&
-    invoiceData.totals.vatAmount < 0
-  ) {
-    throw new ValidationError('Invalid vat amount');
-  }
-
-  // Validate vat amount reduced
-  if (
-    invoiceData.totals &&
-    typeof invoiceData.totals.vatAmountReduced === 'number' &&
-    invoiceData.totals.vatAmountReduced < 0
-  ) {
-    throw new ValidationError('Invalid vat amount reduced');
   }
 
   // Validate totals

@@ -248,12 +248,32 @@ export class TemplateService {
       return a === b;
     });
 
+    // Not equal helper
     Handlebars.registerHelper('ne', function (a: any, b: any) {
       return a !== b;
     });
 
+    // Greater than helper
+    Handlebars.registerHelper('gt', function (a: any, b: any) {
+      return a > b;
+    });
+
+    // And helper
     Handlebars.registerHelper('and', function (...args: any[]) {
       return args.every(Boolean);
+    });
+
+    // Or helper
+    Handlebars.registerHelper('or', function (...args) {
+      // Remove the last argument (Handlebars options)
+      args.pop();
+      // Return true if any argument is truthy
+      return args.some(arg => arg);
+    });
+
+    // Not helper
+    Handlebars.registerHelper('not', function (value: any) {
+      return !value;
     });
 
     Handlebars.registerHelper('subtract', function (a: number, b: number) {
@@ -403,8 +423,21 @@ export class TemplateService {
     this.styles = await fsPromises.readFile(stylesPath, 'utf-8');
   }
 
+  private getTemplateName(jobData: JobData) {
+    const similarTemplates = ['invoice', 'debit', 'credit'];
+    if (jobData.customTemplate) {
+      return jobData.customTemplate;
+    }
+
+    if (similarTemplates.includes(jobData.type)) {
+      return 'invoice';
+    }
+
+    return jobData.type;
+  }
+
   async render(jobData: JobData): Promise<string> {
-    const templateName = jobData.customTemplate ?? jobData.type ?? 'invoice';
+    const templateName = this.getTemplateName(jobData);
     const template = this.templates.get(templateName);
     this.locale = jobData.locale ?? 'bg';
     this.currency = jobData.currency ?? 'BGN';
@@ -426,7 +459,7 @@ export class TemplateService {
         locale: this.locale,
         currency: this.currency,
         isCreditOrDebit: jobData.isCreditOrDebit,
-        subType: jobData.subType,
+        subType: jobData.subType === 'invoice' ? 'original' : jobData.subType,
       };
 
       return template(context);

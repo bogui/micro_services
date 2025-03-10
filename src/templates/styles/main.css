@@ -5,7 +5,7 @@
   --color-primary-light: #60a5fa;
   --color-primary-dark: #1d4ed8;
 
-  --spacing-invoice-margin: 40px;
+  --spacing-invoice-margin: 40px 20px;
 
   --text-invoice-title: 32px;
   --text-invoice-subtitle: 18px;
@@ -75,6 +75,19 @@
 }
 @utility signature-line {
   @apply border-t border-gray-200 mt-16 pt-2 text-center text-gray-500;
+}
+@utility header-table {
+  & td {
+    @apply px-2;
+  }
+
+  & tr:first-child td {
+    @apply pt-2;
+  }
+
+  & tr:last-child td {
+    @apply pb-2;
+  }
 }
 
 @layer utilities {
