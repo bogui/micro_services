@@ -44,7 +44,7 @@ def generate_pdf(data):
             ''',
             'footer_template': f'''
                 <div style="color: #000; font-size: 10px; margin: 10px 0 0 40px; font-family: -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-                    Генерирано от <a href="{job_data.get('frontendUrl')}">{job_data.get('appName')}</a> - {job_data.get('frontendUrl')} {datetime.now().strftime('%d.%m.%Y')}
+                    Генерирано от <a href="{job_data.get('frontendUrl')}">{job_data.get('appName')}</a> - {job_data.get('frontendUrl')}. Разпечатано на {datetime.now().strftime('%d.%m.%Y')}
                 </div>
             '''
         }
